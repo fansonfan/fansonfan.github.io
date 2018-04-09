@@ -10,6 +10,9 @@
 
     <!--Description-->
     
+        <meta name="description" content="##关于一个sql注入注入题目的思考
+123456789101112&amp;lt;?php$link = mysqli_connect(&#39;localhost&#39;,&#39;root&#39;,&#39;root&#39;);mysqli_select_db($link,&#39;code&#39;);$table=addslashes($_GET[&#39;TA">
+    
 
     <!--Author-->
     
@@ -40,7 +43,7 @@
 
     <!-- Title -->
     
-    <title>Archives: 2018/4 - Hexo</title>
+    <title>Hexo</title>
 
     <!-- Bootstrap Core CSS -->
     <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet"/>
@@ -142,75 +145,62 @@
 </nav>
 
     <!-- Main Content -->
-    
+    <!-- Page Header -->
+<!-- Set your background image for this header in your post front-matter: cover -->
 
-<!-- Page Header -->
-<!-- Set your background image for this header in the theme's configuration: index_cover -->
 <header class="intro-header" style="background-image: url('http://www.codeblocq.com/assets/projects/hexo-theme-clean-blog/img/home-bg.jpg')">
     <div class="container">
         <div class="row">
             <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
-                <div class="site-heading">
-                    <h1>2018/4</h1>
+                <div class="post-heading">
+                    <h1>Untitled</h1>
+                    
+                    <span class="meta">
+                        <!-- Date and Author -->
+                        
+                        
+                            2018-04-09
+                        
+                    </span>
                 </div>
             </div>
         </div>
     </div>
 </header>
 
-<!-- Main Content -->
-<div class="container">
-    <div class="row">
-        <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+<!-- Post Content -->
+<article>
+    <div class="container">
+        <div class="row">
+
+            <!-- Tags and categories -->
+           
+
+            <!-- Gallery -->
             
-                <div class="post-preview">
-    <a href="/2018/04/09/关于一个sql注入注入题目的思考1/">
-        <h1 class="post-title archive">
-            Untitled
-        </h1>
-    </a>
-    <p class="post-meta archive">
-        <!-- Date and Author -->
-        
-        2018-04-09
-    </p>
-</div>
+
+            <!-- Post Main Content -->
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <p>##<strong>关于一个sql注入注入题目的思考</strong></p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line">$link = mysqli_connect(<span class="string">'localhost'</span>,<span class="string">'root'</span>,<span class="string">'root'</span>);</span><br><span class="line">mysqli_select_db($link,<span class="string">'code'</span>);</span><br><span class="line"></span><br><span class="line">$table=addslashes($_GET[<span class="string">'TABLE'</span>]);</span><br><span class="line">$sql = <span class="string">"UPDATE '&#123;$table&#125;'</span></span><br><span class="line"><span class="string">       SET 'username'='admin'</span></span><br><span class="line"><span class="string">       WHERE id=1;</span></span><br><span class="line"><span class="string">if (!mysqli_query($link,$sql)) &#123;</span></span><br><span class="line"><span class="string">  echo(mysql_erro($link));</span></span><br><span class="line"><span class="string">&#125;</span></span><br><span class="line"><span class="string">mysqli_closed($link);</span></span><br></pre></td></tr></table></figure>
+<p>​       好好理解下代码里边的UPDATE，首先update下的sql注入不是很常见，第二因为addslashes的存在，整个注入不能出现单引号，双引号和斜线等，第三就是这个sql语句没有写在一行代码里面，所以不能用单行注释把后面的语句注释掉 这样导致整个注入语句只能在<code>UPDATE</code> <code>{$table}</code>发挥了！</p>
+<p>​      仔细了解<code>UPDATE</code> <code>{$table}</code> 的用法啦。。。。。。</p>
+
+
+                
+            </div>
+
+            <!-- Comments -->
             
-                <div class="post-preview">
-    <a href="/2018/04/09/new-blog/">
-        <h1 class="post-title archive">
-            new blog
-        </h1>
-    </a>
-    <p class="post-meta archive">
-        <!-- Date and Author -->
-        
-        2018-04-09
-    </p>
-</div>
+                <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                    
+
+
+                </div>
             
-                <div class="post-preview">
-    <a href="/2018/04/09/hello-world/">
-        <h1 class="post-title archive">
-            Hello World
-        </h1>
-    </a>
-    <p class="post-meta archive">
-        <!-- Date and Author -->
-        
-        2018-04-09
-    </p>
-</div>
-            
-            <div class="archive-before-pagination"></div>
-            <ul class="pager">
-    
-    
-</ul>
         </div>
     </div>
-</div>
-
+</article>
 
     <!-- Footer -->
     <hr />
