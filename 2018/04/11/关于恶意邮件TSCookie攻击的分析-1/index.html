@@ -3,21 +3,27 @@
 <head>
   <meta charset="utf-8">
   
-  <title>fanson&#39;s Blog</title>
+  <title>关于恶意邮件TSCookie攻击的分析 | fanson&#39;s Blog</title>
 
   
   <meta name="author" content="fanson">
   
 
   
+  <meta name="description" content="​       前段时间在安全客上看到了这个邮件病毒的介绍，然后就想着整理下对该恶意邮件的分析，好让自己对该攻击的过程有个深刻的理解。
+​       首先呢！对TSCookie做一下分析：TSCookie本身只充当下载器功能，可以从服务器中下载其他的模块，则恶意模块就能扩展自己的功能。TSCook">
+  
 
+  
+  
+  <meta name="keywords" content="security">
   
 
   <meta id="viewport" name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
 
-  
+  <meta property="og:title" content="关于恶意邮件TSCookie攻击的分析"/>
 
   <meta property="og:site_name" content="fanson&#39;s Blog"/>
 
@@ -54,12 +60,11 @@
 </header>
 
     <main class="site-main posts-loop">
-    
-  <article>
+    <article>
 
   
     
-    <h3 class="article-title"><a href="/2018/04/11/关于恶意邮件TSCookie攻击的分析-1/"><span>关于恶意邮件TSCookie攻击的分析</span></a></h3>
+    <h3 class="article-title"><span>关于恶意邮件TSCookie攻击的分析</span></h3>
     
   
 
@@ -117,115 +122,6 @@
 </article>
 
 
-
-  <article>
-
-  
-    
-    <h3 class="article-title"><a href="/2018/04/11/关于一个sql注入注入题目的思考-1/"><span>关于一个sql注入注入题目的思考</span></a></h3>
-    
-  
-
-  <div class="article-top-meta">
-    <span class="posted-on">
-      <a href="/2018/04/11/关于一个sql注入注入题目的思考-1/" rel="bookmark">
-        <time class="entry-date published" datetime="2018-04-11T08:54:33.000Z">
-          2018-04-11
-        </time>
-      </a>
-    </span>
-  </div>
-
-
-  
-
-  <div class="article-content">
-    <div class="entry">
-      
-        <p>关于一个sql注入注入题目的思考:)</p>
-<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line">$link = mysqli_connect(<span class="string">'localhost'</span>,<span class="string">'root'</span>,<span class="string">'root'</span>);</span><br><span class="line">mysqli_select_db($link,<span class="string">'code'</span>);</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">table=addslashes(_GET[<span class="string">'TABLE'</span>]);</span><br><span class="line">$sql = <span class="string">"UPDATE '&#123;$table&#125;'</span></span><br><span class="line"><span class="string">        SET 'username'='admin'</span></span><br><span class="line"><span class="string">        WHERE id=1;</span></span><br><span class="line"><span class="string">if (!mysqli_query(link,sql)) &#123;</span></span><br><span class="line"><span class="string">  echo(mysql_erro($link));</span></span><br><span class="line"><span class="string">&#125;</span></span><br><span class="line"><span class="string">mysqli_closed($link);</span></span><br></pre></td></tr></table></figure>
-<p>​     好好理解下代码里边的UPDATE，首先update下的sql注入不是很常见，第二因为addslashes的存在，整个注入不能出现单引号，双引号和斜线等，第三就是这个sql语句没有写在一行代码里面，所以不能用单行注释把后面的语句注释掉 这样导致整个注入语句只能在<code>UPDATE</code> <code>{$table}</code>发挥了！</p>
-<p> 仔细了解<code>UPDATE</code> <code>{$table}</code> 的用法啦。。。。。。</p>
-
-      
-    </div>
-
-  </div>
-
-  <div class="article-footer">
-    <div class="article-meta pull-left">
-
-    
-
-    
-    
-
-    <span class="post-tags">
-      <i class="icon-tags"></i>
-        <a href="/tags/web-security/">web security</a>
-    </span>
-    
-
-    </div>
-
-    
-  </div>
-</article>
-
-
-
-  <article>
-
-  
-    
-    <h3 class="article-title"><a href="/2018/04/09/hello-world/"><span>Hello World</span></a></h3>
-    
-  
-
-  <div class="article-top-meta">
-    <span class="posted-on">
-      <a href="/2018/04/09/hello-world/" rel="bookmark">
-        <time class="entry-date published" datetime="2018-04-09T10:08:06.710Z">
-          2018-04-09
-        </time>
-      </a>
-    </span>
-  </div>
-
-
-  
-
-  <div class="article-content">
-    <div class="entry">
-      
-        <h2 id="纪念自己的第一个blog"><a href="#纪念自己的第一个blog" class="headerlink" title="纪念自己的第一个blog"></a>纪念自己的第一个blog</h2><p>中间真的是跳了好多次坑。。。。</p>
-<p>略略略</p>
-
-      
-    </div>
-
-  </div>
-
-  <div class="article-footer">
-    <div class="article-meta pull-left">
-
-    
-
-    
-
-    </div>
-
-    
-  </div>
-</article>
-
-
-
-
-<nav class="pagination">
-  
-  
-</nav>
     </main>
 
     <footer class="site-footer">
