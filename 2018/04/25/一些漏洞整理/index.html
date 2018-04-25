@@ -3,21 +3,28 @@
 <head>
   <meta charset="utf-8">
   
-  <title>fanson&#39;s Blog</title>
+  <title>一些漏洞整理 | fanson&#39;s Blog</title>
 
   
   <meta name="author" content="fanson">
   
 
   
+  <meta name="description" content="一些漏洞的基础原理+安全基础知识整理（之前就想发来着，但是一直完完善善到现在）
+sql注入
+1234567891011SQL注入:是一种通过操纵输入来修改后台sql语句已达到利用代码进行攻击的技术。为什么会产生SQL注入：程序在开发过程中不注意规范书写sql语句和对字符进行过滤，导致可以通过全局变量">
+  
 
+  
+  
+  <meta name="keywords" content="web security">
   
 
   <meta id="viewport" name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
 
-  
+  <meta property="og:title" content="一些漏洞整理"/>
 
   <meta property="og:site_name" content="fanson&#39;s Blog"/>
 
@@ -54,12 +61,11 @@
 </header>
 
     <main class="site-main posts-loop">
-    
-  <article>
+    <article>
 
   
     
-    <h3 class="article-title"><a href="/2018/04/25/一些漏洞整理/"><span>一些漏洞整理</span></a></h3>
+    <h3 class="article-title"><span>一些漏洞整理</span></h3>
     
   
 
@@ -136,273 +142,6 @@
 </article>
 
 
-
-  <article>
-
-  
-    
-    <h3 class="article-title"><a href="/2018/04/12/SQL注入原理（基础篇）/"><span>SQL注入原理（基础篇）</span></a></h3>
-    
-  
-
-  <div class="article-top-meta">
-    <span class="posted-on">
-      <a href="/2018/04/12/SQL注入原理（基础篇）/" rel="bookmark">
-        <time class="entry-date published" datetime="2018-04-12T12:31:02.000Z">
-          2018-04-12
-        </time>
-      </a>
-    </span>
-  </div>
-
-
-  
-
-  <div class="article-content">
-    <div class="entry">
-      
-        <h2 id="SQL注入原理（基础篇）"><a href="#SQL注入原理（基础篇）" class="headerlink" title="SQL注入原理（基础篇）"></a>SQL注入原理（基础篇）</h2><p>​       <strong>(重点是对sql 原理的理解）</strong>进行sql 注入，攻击者能够直接对服务器实施主动攻击，而不需要用户的参与。适合小白入门，大牛们请绕开！</p>
-<ol>
-<li>数据库内的信息全部被外界窃取</li>
-<li>数据库中的内容被篡改</li>
-<li>登录认证被绕过</li>
-<li>其他，例如服务器上的文件被读取或者修改，服务器上的程序被执行等</li>
-</ol>
-<p><strong>0x00 UNION联合查询</strong></p>
-<p>我们先来看看含有sql 注入漏洞的脚本</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">&lt;?php</span><br><span class="line">  session_start();</span><br><span class="line">  header(&quot;Content-Type:text/html;charset=UTF-8&quot;);</span><br><span class="line">  $author = $_GET[&apos;author&apos;];</span><br><span class="line">  $con = pg_connect(&quot;host=localhost dbname=xxx user=xxx password=xxx&quot;);</span><br><span class="line">  $sql = &quot;SELECT * FROM books WHERE author =&apos;$author&apos; ORDER BY id&quot;;</span><br><span class="line">  $rs =pg_query($con,$sql); </span><br><span class="line">?&gt;</span><br></pre></td></tr></table></figure>
-<p>sql 注入的语句</p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$author-&gt;'+union+select+id,pwd,name,addr,null,null,null+from+users;</span><br></pre></td></tr></table></figure>
-<p><strong>0x01 sql 注入绕过认证</strong></p>
-<p>认证页面.html</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">&lt;html&gt;</span><br><span class="line">  &lt;head&gt;</span><br><span class="line">    &lt;title&gt;登录认证&lt;/title&gt;</span><br><span class="line">  &lt;/head&gt;</span><br><span class="line">  &lt;body&gt;</span><br><span class="line">    &lt;form action=&quot;认证.php&quot; method=&quot;post&quot;&gt;</span><br><span class="line">      username&lt;input type=&quot;text&quot; name=&quot;ID&quot; value=&quot;xxx&quot;&gt;&lt;br&gt;</span><br><span class="line">      password&lt;input type=&quot;text&quot; name=&quot;PWD&quot; value=&quot;xxx&quot;&gt;&lt;br&gt;</span><br><span class="line">      &lt;input type=&quot;submit&quot; value=&quot;login&quot;&gt;</span><br><span class="line">    &lt;/form&gt;</span><br><span class="line">  &lt;/body&gt;</span><br><span class="line">  &lt;/head&gt;</span><br><span class="line">&lt;/html&gt;</span><br></pre></td></tr></table></figure>
-<p>认证页面.php</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">&lt;?php</span><br><span class="line">   session_start();</span><br><span class="line">   header(&quot;Content-Type:text/html;charset=UTF-8&quot;);</span><br><span class="line">   $id = @$_POST[&apos;ID&apos;]; //用户id名</span><br><span class="line">   $pwd = @$_POST[&apos;PWD&apos;]; //用户密码</span><br><span class="line">   $con = pg_connect(&quot;host=localhost dbname=xxx user=xxx password=xxx&quot;);</span><br><span class="line">   $sql = &quot;SELECT * FROM user WHERE id =&apos;$id&apos; and PWD =&apos;$pwd&apos;&quot;;</span><br><span class="line">   $rs = pg_query($con,$sql);</span><br><span class="line">?&gt;</span><br><span class="line">&lt;html&gt;</span><br><span class="line">  &lt;body&gt;</span><br><span class="line">    &lt;?php</span><br><span class="line">      if (pg_num_rows($rw)&gt;0)&#123;</span><br><span class="line">          $_SESSION[&apos;id&apos;] =$id;</span><br><span class="line">          echo &apos;登录成功&apos;</span><br><span class="line">      &#125;else&#123;</span><br><span class="line">          echo &apos;登录失败&apos;</span><br><span class="line">      &#125;</span><br><span class="line">    pg_close($con);</span><br><span class="line">    ?&gt;</span><br><span class="line">  &lt;/body&gt;</span><br><span class="line">&lt;/html&gt;</span><br></pre></td></tr></table></figure>
-<p>绕过语句</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">username="xxxxx"</span><br><span class="line">password="'OR'a'='a"</span><br><span class="line"><span class="keyword">SELECT</span> *<span class="keyword">FROM</span> <span class="keyword">users</span> <span class="keyword">WHERE</span> <span class="keyword">id</span> =<span class="string">'xxxxx'</span> <span class="keyword">and</span> pwd =<span class="string">" OR'a'='a'</span></span><br></pre></td></tr></table></figure>
-<p>0x02 sql 注入攻击篡改数据</p>
-<p>篡改语句</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">update</span> <span class="keyword">table</span> <span class="keyword">set</span> title=<span class="string">'&lt;i&gt;xxx&lt;/i&gt;'</span><span class="keyword">where</span> <span class="keyword">id</span>=<span class="string">'1'</span></span><br></pre></td></tr></table></figure>
-<p>拼接后的语句</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> *<span class="keyword">FROM</span> XXX <span class="keyword">WHERE</span> author=<span class="string">";update table set title='&lt;i&gt;xxx&lt;/i&gt;'where id='1'--'ORDER BY id</span></span><br></pre></td></tr></table></figure>
-<p><strong>0x03 读取文件</strong></p>
-<p>产生如下URL来拷贝/ect/passwd 的内容到xxx表中：</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">;copy xxx(title) form '/ect/passwd';</span><br><span class="line">....php?author='or+author+is+null<span class="comment">--</span></span><br></pre></td></tr></table></figure>
-<p>​        copy语句是PostgreSQL数据库的扩展功能，能够将问价中的内容存入表中。此例中/ect/passwd就被存入了books表的title列。执行copy 语句需要PostgreSQL的管理员权限以连接数据库。</p>
-<p><strong>0x04 sql 安全解决方案</strong></p>
-<p>首先sql注入产生的原因：程序的开发过程中不注意规范书写sql语句和对特殊字符进行过滤，导致可以通过全局变量post/get提交一些sql语句正常执行。</p>
-<ol>
-<li><p>从代码角度：</p>
-<p>​     a：静态占位符:格式固定/定位</p>
-<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line">  <span class="keyword">require_once</span> <span class="string">'MDB.php'</span>;</span><br><span class="line">  header(<span class="string">"Content-Type:text/html;charset=UTF-8"</span>);</span><br><span class="line">  $author = $_GET[<span class="string">'author'</span>];</span><br><span class="line">  <span class="comment">//连接数据库时指定字符编码为UTF-8</span></span><br><span class="line">  $mdb =MDB::connect(<span class="string">'pgsql://xxx?charset=utf8'</span>);</span><br><span class="line">  <span class="comment">//使用占位符</span></span><br><span class="line">  $sql =<span class="string">"SELECT * FROM xxx WHERE author=? ORDER BY id"</span>;</span><br><span class="line">  <span class="comment">//准备调用sql语句</span></span><br><span class="line">  $stmt =$mdb-&gt;prepare($sql,<span class="keyword">array</span>(<span class="string">'text'</span>));</span><br><span class="line">  <span class="comment">//执行sql语句</span></span><br><span class="line">  $rs =$stmt-&gt;execute(<span class="keyword">array</span>($author));</span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
-</li>
-<li><p>从WAF角度：</p>
-<p>​    可以配置设置waf策略，自定义策略！</p>
-<hr>
-<p>​                                                            <em>谢谢浏览!!!</em></p>
-<hr>
-<p>​</p>
-</li>
-</ol>
-
-      
-    </div>
-
-  </div>
-
-  <div class="article-footer">
-    <div class="article-meta pull-left">
-
-    
-
-    
-    
-
-    <span class="post-tags">
-      <i class="icon-tags"></i>
-        <a href="/tags/web-security/">web security</a>
-    </span>
-    
-
-    </div>
-
-    
-  </div>
-</article>
-
-
-
-  <article>
-
-  
-    
-    <h3 class="article-title"><a href="/2018/04/11/关于恶意邮件TSCookie攻击的分析-1/"><span>关于恶意邮件TSCookie攻击的分析</span></a></h3>
-    
-  
-
-  <div class="article-top-meta">
-    <span class="posted-on">
-      <a href="/2018/04/11/关于恶意邮件TSCookie攻击的分析-1/" rel="bookmark">
-        <time class="entry-date published" datetime="2018-04-11T13:56:37.000Z">
-          2018-04-11
-        </time>
-      </a>
-    </span>
-  </div>
-
-
-  
-
-  <div class="article-content">
-    <div class="entry">
-      
-        <p>​       前段时间在安全客上看到了这个邮件病毒的介绍，然后就想着整理下对该恶意邮件的分析，好让自己对该攻击的过程有个深刻的理解。</p>
-<p>​       首先呢！对TSCookie做一下分析：TSCookie本身只充当下载器功能，可以从服务器中下载其他的模块，则恶意模块就能扩展自己的功能。TSCookie会下载一个DLL文件，这个DLL文件具备各种功能，其中就包括渗透功能(下文简TSCookieRAT) TSCookie刚开始时会发送一个HTTP GET请求，如下所示。发出去的消息经过编码处理，嵌入在头部中的Cookie字段。</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">GET /Default.aspx HTTP/1.1</span><br><span class="line">Cache-Control: no-cache</span><br><span class="line">Connection: Keep-Alive</span><br><span class="line">Date: Thu, 18 Jan 2018 10:20:55 GMT</span><br><span class="line">Pragma: no-cache</span><br><span class="line">Accept: */*</span><br><span class="line">Cookie: 1405D7CD01C6978E54E86DA9525E1395C4DD2F276DD28EABCC3F6201ADAA66F55C15352D29D0FFE51BC9D431EB23E8E58959653D9366E372B5CFCC49BB</span><br><span class="line">User-Agent: Mozilla/4.0 (compatible; MSIE 8.0; Win32)</span><br><span class="line">Host:[host name]:443</span><br></pre></td></tr></table></figure>
-<p> Cookie字段中包含的信息也经过RC4加密处理过（加密密钥为头部中的Date字段值）。恶意软件会将下载的模块加载到内存中，然后调用HTTP GET请求所获取的加载器来执行这个模块。</p>
-<p><strong>TSCookie的行为分析</strong></p>
-<p>​       该TSCookie使用HTTP协议与服务器进行通信，也会下载一个“模块”以及用来加载模块的一个“加载器”。恶意软件在资源区中嵌入了一个加密的DLL文件。当恶意软件执行时，就会将该DLL文件加载到内存中并加以执行。DLL文件会执行一些主要函数，比如与C&amp;C服务器通信（某些情况下，主要函数并没有经过加密处理，会直接存放在恶意软件中。）</p>
-<p><strong>TSCookieRAT行为分析</strong></p>
-<p>​       TSCookie在加载TSCookieRAT时会附带一些参数，比如C&amp;C服务器信息等。在执行时，TSCookieRAT会通过HTTP POST请求将被感染主机的信息发送给外部服务器（HTTP头部格式与TSCookie的一样）。TSCookieRAT会发送一个HTTP GET请求（HTTP头部载荷格式与TSCookie一样）。</p>
-<p>​       通过这个请求，TSCookieRAT可以从C&amp;C服务器那接收命令，所执行的功能如下所示</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">1、执行任意shell命令</span><br><span class="line"></span><br><span class="line">2、发送磁盘驱动器信息</span><br><span class="line"></span><br><span class="line">3、发送系统信息</span><br><span class="line"></span><br><span class="line">4、文件操作</span><br><span class="line"></span><br><span class="line">5、收集IE、Edge、Firefox、Chrome以及Outlook的密码</span><br></pre></td></tr></table></figure>
-<p>命令执行的结果会发送给服务器，所使用的格式与第一个HTTP  POST请求一样。</p>
-
-      
-    </div>
-
-  </div>
-
-  <div class="article-footer">
-    <div class="article-meta pull-left">
-
-    
-
-    
-    
-
-    <span class="post-tags">
-      <i class="icon-tags"></i>
-        <a href="/tags/security/">security</a>
-    </span>
-    
-
-    </div>
-
-    
-  </div>
-</article>
-
-
-
-  <article>
-
-  
-    
-    <h3 class="article-title"><a href="/2018/04/11/关于一个sql注入注入题目的思考-1/"><span>关于一个sql注入注入题目的思考</span></a></h3>
-    
-  
-
-  <div class="article-top-meta">
-    <span class="posted-on">
-      <a href="/2018/04/11/关于一个sql注入注入题目的思考-1/" rel="bookmark">
-        <time class="entry-date published" datetime="2018-04-11T08:54:33.000Z">
-          2018-04-11
-        </time>
-      </a>
-    </span>
-  </div>
-
-
-  
-
-  <div class="article-content">
-    <div class="entry">
-      
-        <p>关于一个sql注入注入题目的思考:)</p>
-<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line">$link = mysqli_connect(<span class="string">'localhost'</span>,<span class="string">'root'</span>,<span class="string">'root'</span>);</span><br><span class="line">mysqli_select_db($link,<span class="string">'code'</span>);</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">table=addslashes(_GET[<span class="string">'TABLE'</span>]);</span><br><span class="line">$sql = <span class="string">"UPDATE '&#123;$table&#125;'</span></span><br><span class="line"><span class="string">        SET 'username'='admin'</span></span><br><span class="line"><span class="string">        WHERE id=1;</span></span><br><span class="line"><span class="string">if (!mysqli_query(link,sql)) &#123;</span></span><br><span class="line"><span class="string">  echo(mysql_erro($link));</span></span><br><span class="line"><span class="string">&#125;</span></span><br><span class="line"><span class="string">mysqli_closed($link);</span></span><br></pre></td></tr></table></figure>
-<p>​     好好理解下代码里边的UPDATE，首先update下的sql注入不是很常见，第二因为addslashes的存在，整个注入不能出现单引号，双引号和斜线等，第三就是这个sql语句没有写在一行代码里面，所以不能用单行注释把后面的语句注释掉 这样导致整个注入语句只能在<code>UPDATE</code> <code>{$table}</code>发挥了！</p>
-<p> 仔细了解<code>UPDATE</code> <code>{$table}</code> 的用法啦。。。。。。</p>
-
-      
-    </div>
-
-  </div>
-
-  <div class="article-footer">
-    <div class="article-meta pull-left">
-
-    
-
-    
-    
-
-    <span class="post-tags">
-      <i class="icon-tags"></i>
-        <a href="/tags/web-security/">web security</a>
-    </span>
-    
-
-    </div>
-
-    
-  </div>
-</article>
-
-
-
-  <article>
-
-  
-    
-    <h3 class="article-title"><a href="/2018/04/09/hello-world/"><span>Hello World</span></a></h3>
-    
-  
-
-  <div class="article-top-meta">
-    <span class="posted-on">
-      <a href="/2018/04/09/hello-world/" rel="bookmark">
-        <time class="entry-date published" datetime="2018-04-09T10:08:06.710Z">
-          2018-04-09
-        </time>
-      </a>
-    </span>
-  </div>
-
-
-  
-
-  <div class="article-content">
-    <div class="entry">
-      
-        <h2 id="纪念自己的第一个blog"><a href="#纪念自己的第一个blog" class="headerlink" title="纪念自己的第一个blog"></a>纪念自己的第一个blog</h2><p>中间真的是跳了好多次坑。。。。</p>
-<p>略略略</p>
-
-      
-    </div>
-
-  </div>
-
-  <div class="article-footer">
-    <div class="article-meta pull-left">
-
-    
-
-    
-
-    </div>
-
-    
-  </div>
-</article>
-
-
-
-
-<nav class="pagination">
-  
-  
-</nav>
     </main>
 
     <footer class="site-footer">
