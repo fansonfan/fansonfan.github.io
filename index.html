@@ -79,11 +79,30 @@
   <div class="article-content">
     <div class="entry">
       
-        <p>时隔好久之后的博客，一直准备要写来着，可惜时间问题，所以就一直拖着！</p>
-<p>今天是猪猪的第一天加班，要陪他下班。。。（所以就来先写个前导吧)</p>
-<p>​       本来要在上周末打算写这篇的，猪猪给我了我个大惊喜，周末过得好充实。再加上今天终于解决了上周的遗留问题，应该是猪猪来了的原因吧，所以这么快就解决了这个问题！最近在项目中接触到了<code>WebKit</code>的相关问题！谈到<code>WebKit</code>，那就来谈谈<code>WebKit</code>的编译问题吧！</p>
-<p>​       编译的相关环境：Ubuntu18.04 </p>
-<p>​       </p>
+        <p>​       时隔好久之后的博客，一直准备要写来着，可惜时间问题，所以就一直拖着！</p>
+<p>​       今天是猪猪的第一天加班，要陪他下班。。。（所以就来先写个前导吧)</p>
+<p>​       本来要在上周末打算写这篇的，猪猪给我了我个大惊喜，周末过得好充实。再加上今天终于解决了上周的遗留问题，应该是猪猪来了的原因吧，所以这么快就解决了这个问题！最近在项目中接触到了<code>WebKit</code>的相关问题！谈到<code>WebKit</code>，那就来谈谈最新版的<code>WebKit</code>的编译问题吧！</p>
+<p><strong>一，webkit编译</strong></p>
+<p>​        源码下载的方式：</p>
+<ol>
+<li><p>进入<a href="https://webkit.org/getting-the-code/" target="_blank" rel="noopener">https://webkit.org/getting-the-code/</a> 进行源码包 的下载，该源码每天都会进行更新；然后对包进行解压</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">tar jxvf WebKit-SVN-source.tar.bz2</span><br><span class="line">cd webkit</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>SVN进行下载：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">svn checkout https://svn.webkit.org/repository/webkit/trunk WebKit</span><br><span class="line">并且可运行update-webkit脚本更新源码</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>Git下载：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git clone git://git.webkit.org/WebKit.git WebKit</span><br></pre></td></tr></table></figure>
+<p>  对源码进行编译：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line">在编译过程中因为系统版本的问题，踩过的坑可真不少！所以在这里记录一下：</span><br><span class="line">1.依赖库安装</span><br><span class="line">编译过程中，我们首先需要进行WebKit提供的脚本依赖库安装：</span><br><span class="line"></span><br><span class="line">./WebKit/Tools/gtk/install-dependencies </span><br><span class="line">./WebKit/Tools/Script/update-webkitgtk-libs //执行第二个命令要注意不能在root账号下 第二个命令实际上是下载jhbuild编译工具编译gnome环境，在执行第二条命令时，这个耗时特别长,会出现网络问题，导致如下下载出错</span><br><span class="line">git clone https://github.com/jhbuild.git </span><br><span class="line">clone 'jhbuild'...</span><br><span class="line">remote: Counting objects: 3658, done.</span><br><span class="line">error: RPC failed; curl 56 GnuTLS recv error (-54): Error in the pull function.</span><br><span class="line">fatal: The remote end hung up unexpectedly</span><br><span class="line">fatal: （EOF）</span><br><span class="line">fatal: index-pack failed</span><br><span class="line">Failed to build GTK+ port dependencies with jhbuild</span><br><span class="line">Died at ./WebKit/Tools/Scripts/update-webkitgtk-libs line 24.</span><br><span class="line">解决方法：</span><br><span class="line">应该是clone内容更新太多，需要设置postBuffer更大些，用下面命令解决</span><br><span class="line">git config --global http.postBuffer 524288000</span><br><span class="line">大多是因为网速的问题，所以这部分可尽量选择在网速较好的时段内去选择下载，中间出现差错，可多次尝试。</span><br><span class="line"></span><br><span class="line">2.编译</span><br><span class="line">在以上安装包安装完毕后，可进行编译</span><br><span class="line">如果是svn得到的代码，进入webkit目录后执行编译脚本得到./WebKitBuild/Release/bin/jsc</span><br><span class="line"><span class="meta">$</span> cd webkit</span><br><span class="line"><span class="meta">$</span> ./Tools/Scripts/build-jsc --gtk --makeargs="-j4"</span><br><span class="line">由于webkit是最新版的，而且编译的时候参考了官网的教程，所以在编译的过程中，相对速度较快，问题较少，中间缺少一个依赖包，安装即可；</span><br><span class="line">-- Checking for module 'libwoff2dec'</span><br><span class="line">--   No package 'libwoff2dec' found</span><br><span class="line">-- Could NOT find WOFF2Dec: Found unsuitable version "", but required is at least "1.0.2" (found WOFF2DEC_INCLUDE_DIRS-NOTFOUND)</span><br><span class="line">CMake Error at Source/cmake/OptionsGTK.cmake:351 (message):</span><br><span class="line">  libwoff2dec is needed for USE_WOFF2.</span><br><span class="line">Call Stack (most recent call first):</span><br><span class="line">  Source/cmake/WebKitCommon.cmake:61 (include)</span><br><span class="line">  CMakeLists.txt:156 (include)</span><br><span class="line">解决方法：根据提示的No package 'libwoff2dec' found 如果直接下载package 'libwoff2dec'会报错，对相关依赖包进行查看后该处缺少的是libwoff-dev 直接sudo apt下载即可</span><br><span class="line">sudo apt-get install libwoff-dev</span><br><span class="line">安装完毕，继续进行编译则可。</span><br><span class="line">最终会出现想要的这个</span><br><span class="line">[1336/1336] Linking CXX executable bin/testb3</span><br><span class="line">====================================================================</span><br><span class="line"> JavaScriptCore is now built (36m:38s). </span><br><span class="line">====================================================================</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<p><strong>二，编译环境</strong></p>
+<p>​       编译主机版本：<code>Ubuntu 18.04</code>  </p>
+<p>​       <code>WebKit</code>版本：<code>WebKit r235496</code></p>
+<p><strong>三，参考文献</strong></p>
+<p>​     【1】<a href="https://webkit.org/building-webkit/" target="_blank" rel="noopener">https://webkit.org/building-webkit/</a></p>
+<p>​     【2】<a href="https://trac.webkit.org/wiki/BuildingGtk" target="_blank" rel="noopener">https://trac.webkit.org/wiki/BuildingGtk</a></p>
 
       
     </div>
