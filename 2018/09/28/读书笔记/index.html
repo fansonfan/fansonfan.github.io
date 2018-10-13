@@ -1,0 +1,174 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>读书笔记 | fanson&#39;s Blog</title>
+
+  
+  <meta name="author" content="fanson">
+  
+
+  
+  <meta name="description" content="读《程序员的自我修养》记录
+三个关键部位 ：中央处理器CPU  内存和I/O控制芯片
+为了能够让CPU能够和I/O设备进行通信，每个设备都会有一个I/O控制器
+南桥/北桥：由于北桥运行的速度非常高，所有相对低速的设备如果全都直接连接在北桥上，北桥既须处理高速设备，又须处理低速设备，设计就会十分复杂，">
+  
+
+  
+  
+  <meta name="keywords" content="books">
+  
+
+  <meta id="viewport" name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+  <meta property="og:title" content="读书笔记"/>
+
+  <meta property="og:site_name" content="fanson&#39;s Blog"/>
+
+  
+  <meta property="og:image" content="/favicon.ico"/>
+  
+
+  <link href="/favicon.ico" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="fanson&#39;s Blog" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+</head>
+
+
+<body>
+<div class="blog">
+  <div class="content">
+
+    <header>
+  <div class="site-branding">
+    <h1 class="site-title">
+      <a href="/">fanson&#39;s Blog</a>
+    </h1>
+    <p class="site-description"></p>
+  </div>
+  <nav class="site-navigation">
+    <ul>
+      
+        <li><a href="/">Home</a></li>
+      
+        <li><a href="/archives">Archives</a></li>
+      
+    </ul>
+  </nav>
+</header>
+
+    <main class="site-main posts-loop">
+    <article>
+
+  
+    
+    <h3 class="article-title"><span>读书笔记</span></h3>
+    
+  
+
+  <div class="article-top-meta">
+    <span class="posted-on">
+      <a href="/2018/09/28/读书笔记/" rel="bookmark">
+        <time class="entry-date published" datetime="2018-09-28T15:17:36.000Z">
+          2018-09-28
+        </time>
+      </a>
+    </span>
+  </div>
+
+
+  
+
+  <div class="article-content">
+    <div class="entry">
+      
+        <p>读《程序员的自我修养》记录</p>
+<p>三个关键部位 ：中央处理器CPU  内存和I/O控制芯片</p>
+<p>为了能够让CPU能够和I/O设备进行通信，每个设备都会有一个I/O控制器</p>
+<p>南桥/北桥：由于北桥运行的速度非常高，所有相对低速的设备如果全都直接连接在北桥上，北桥既须处理高速设备，又须处理低速设备，设计就会十分复杂，于是人们又设计了专门处理低速设备的南桥芯片，磁盘，USB，键盘，鼠标等设备都连接在南桥上，由南桥将他们汇总后链接在北桥上。</p>
+<p>对称多处理器（SMP）:(多个CPU)，每个CPU在系统中所处的地位和发挥的功能都是一样的，是相互对称的。理论上讲，增加CPU的数量就可以提高运算速度，并且理想情况下，速度的提高与CPU的数量成正比。但实际并非如此，因为我们的程序并不都能分解成若干的完全不相干的子问题，就比如一个女生可以花10个月生出一个孩子，但是十个女生并不能在一个月就生出一个孩子一样。</p>
+<p>多核处理器：多个处理器共享一个缓存部件，其实为简化版SMP</p>
+<p>‘’计算机科学领域的任何问题都可以通过增加一个间接的中间层来解决。’’</p>
+<p>计算机软件体系结构（图）</p>
+<p>接口：满足每个层次之间的相互通信的通信的协议</p>
+<p>虚拟机技术：在硬件与操作系统之间增加了一层虚拟层，使得一个计算机上可以同时运行多个操作系统。</p>
+<p>系统调用接口在实现中往往以软件中断的方式提供，eg:Linux使用0x80号中断作为系统调用接口；windows使用0x2E号中断作为系统调用接口（Windows XP Sp2开始，windows开始采用一种新的系统调用方式）。</p>
+<p>分时系统：每个程序运行一段时间以后都主动让出CPU给其他程序，使得一段时间内每个程序都有机会运行一小段时间。</p>
+<p>多任务系统：操作系统接管了所有的硬件资源，并且本身运行在一个受硬件保护的级别。所有的应用程序都以进程的方式运行在比操作系统权限更低的级别，每个进程都有自己独立的地址空间，是得进程之间的地址空间相互隔离。</p>
+<p>抢占式：操作系统可以强制剥夺CPU资源并且分配给它认为目前最需要的进程。</p>
+<p>磁盘寻址：</p>
+<p>如何找到我们想要的数据呢？即如何在硬盘上找到任意一个物理地址。</p>
+<p>1）CHS模式（Cylinder/Head/Sector）  就是给定柱面号、磁头号、扇区号。柱面号给定在哪一个圆环上，磁头号指定了在哪一层，扇区号指定了圆上的位置，于是就定位到了一个准确的扇区了。  2）LBA（Logical Block Addressing，逻辑块寻址）  就是只给一个逻辑号码，根据硬盘的柱面数、每个柱面的磁头数、每个磁道的扇区数来计算柱面号、磁头号、扇区号。  编号方法：  按照柱面、磁头、扇区顺序来编，即编完0号柱面0号磁头所在磁道的若干扇区后，再编0号柱面1号磁头所在磁道的所以扇区，编完0号柱面的所有磁头后再编1号柱面。   </p>
+<p>3）相互转换  LBA = （柱面号 <em> 一个柱面的磁头数 + 磁头号） </em> 一个磁道上的扇区数 + （扇区号-1）   柱面号 = LBA / （一个柱面的磁头数 <em> 每个磁道扇区数）  令   x = LBA % （一个柱面的磁头数 </em> 每个磁道扇区数）  磁头号 = x / 每个磁道上的扇区数  扇区号 = x % 每个磁道上的扇区数 + 1 </p>
+<p><a href="https://blog.csdn.net/guzhou_diaoke/article/details/8479033" target="_blank" rel="noopener">https://blog.csdn.net/guzhou_diaoke/article/details/8479033</a></p>
+<p>2018.10.2</p>
+<p>内存使用效率：</p>
+<p>分页：程序在一段时间段内都是不会被用到的，用更小粒度的内存分割和映射的方法，使得程序的局部性原理得到充分的利用，大大提高了内存的使用率，这种方法就是分页。</p>
+<p>线程：（或称）轻量级进程，是程序执行流的最小单元，标准线程=线程ID+当前指令指针pc+寄存器集合+堆栈</p>
+<p>通常一个进程=多个线程</p>
+<p>​      线程的访问非常的自由，它可以访问进程内存里的所有数据，甚至包括其他进程的堆栈（如果他知道其他进程的堆栈地址，那么这种就是很少见的情况）但实际运用中线程也拥有自己的私有存储空间，包括以下几个方面：</p>
+<ul>
+<li>栈：（尽管并非完全无法被其他线程访问，一般情况下仍然可以认为是私有的数据）</li>
+<li>线程局部存储（TLS）:是某些操作系统为线程单独提供的私有空间，但通常只是有限的容量</li>
+<li>寄存器（包括pc寄存器）：寄存器是执行流的基本数据，因此为线程私有。</li>
+</ul>
+<p>IO密集型线程：频繁等待的线程；</p>
+<p>CPU密集线程：很少等待的线程；</p>
+<p>IO密集型线程总比CPU型密集型线程容易得到优先级的提升；</p>
+<p>线程优先级改变一般有三种方式：</p>
+<ul>
+<li>用户指定优先级</li>
+<li>根据进入等待状态的频繁程度提升或降低优先级</li>
+<li>长时间得不到执行而被提升优先级</li>
+</ul>
+<p>写时复制：指的是两个任务可以同时自由的读取内存，但任意一个任务试图对内存进行修改时，内存就会复制一份提供给修改方单独使用，以免影响到其他的任务使用。</p>
+<p>fork与exec通常用于产生新任务，而如果要产生新线程，则可以使用clone</p>
+<p>原子操作：windows里有一套API,专门进行一些原子操作（interlocked API）</p>
+
+      
+    </div>
+
+  </div>
+
+  <div class="article-footer">
+    <div class="article-meta pull-left">
+
+    
+
+    
+    
+
+    <span class="post-tags">
+      <i class="icon-tags"></i>
+        <a href="/tags/books/">books</a>
+    </span>
+    
+
+    </div>
+
+    
+  </div>
+</article>
+
+
+    </main>
+
+    <footer class="site-footer">
+  <p class="site-info">
+    Proudly powered by <a href="https://hexo.io/" target="_blank">Hexo</a> and
+    Theme by <a href="https://github.com/CodeDaraW/Hacker" target="_blank">Hacker</a>
+    </br>
+    
+    &copy; 2018 fanson
+    
+  </p>
+</footer>
+    
+  </div>
+</div>
+</body>
+</html>
