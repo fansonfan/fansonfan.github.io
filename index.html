@@ -83,7 +83,7 @@
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//vuln.c</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span><span class="meta-string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">func</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">char</span> name[<span class="number">0x50</span>];</span><br><span class="line">    read(<span class="number">0</span>, name, <span class="number">0x100</span>);</span><br><span class="line">    write(<span class="number">1</span>, name, <span class="number">0x100</span>);</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    func();</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>操作系统提供了许多安全机制来试图降低或阻止缓冲区溢出攻击带来的安全风险，包括<code>DEP、ASLR</code>等。在编写漏洞利用代码的时候，需要特别注意目标进程是否开启了<code>DEP</code>（<code>Linux</code>下对应<code>NX</code>）、<code>ASLR</code>（<code>Linux</code>下对应<code>PIE</code>）等机制，例如存在<code>DEP</code>（<code>NX</code>）的话就不能直接执行栈上的数据，存在<code>ASLR</code>的话各个系统调用的地址就是随机化的。所以在编译之前，首先要来关闭掉<code>linux</code>系统栈保护机制。</p>
 <p>学习下相关的保护机制，<code>checksec</code>工具可以来检查各个保护机制是否打开</p>
-<p><img src="/2018/10/28/栈溢出实例学习/D:/my first blog\blog\Hexo\source\_posts\栈溢出实例学习\1.PNG" alt=""></p>
+<p><img src="/2018/10/28/栈溢出实例学习/1.PNG" alt=""></p>
 <p>依次来看看上图中的各个保护机制，这个具体可参考（<a href="https://introspelliam.github.io/2017/09/30/linux%E7%A8%8B%E5%BA%8F%E7%9A%84%E5%B8%B8%E7%94%A8%E4%BF%9D%E6%8A%A4%E6%9C%BA%E5%88%B6/" target="_blank" rel="noopener">上善若水的博客</a>），下面应用一部分当学习笔记记录吧：</p>
 <ul>
 <li><p><code>CANNARY</code>(栈保护)：上图中表示栈保护功能开启，栈溢出保护是一种缓冲区溢出攻击缓解手段，当函数存在缓冲区溢出攻击漏洞时，攻击者可以覆盖栈上的返回地址来让自己已经设计好的<code>shellcode</code>得到执行。而当启用栈保护后，函数开始执行的时候会先往栈里插入<code>cookie</code>信息，当函数真正返回的时候会验证<code>cookie</code>信息是否合法，如果不合法就停止程序运行。攻击者在覆盖返回地址的时候往往也会将<code>cookie</code>信息给覆盖掉，导致栈保护检查失败而阻止<code>shellcode</code>的执行。在<code>Linux</code>中我们将<code>cookie</code>信息称为<code>CANARY</code>。</p>
@@ -92,7 +92,7 @@
 </li>
 <li><p><code>NX(DEP)</code>:<code>NX</code>（<code>No-eXecute</code>）即为不可执行的意思，基本原理是将数据所在内存页标识为不可执行，当程序溢出成功转入<code>shellcode</code>时，程序会尝试在数据页面上执行指令，此时<code>CPU</code>就会抛出异常，而不是去执行恶意指令。</p>
 <p>工作原理如图：</p>
-<p><img src="/2018/10/28/栈溢出实例学习/D:/my first blog\blog\Hexo\source\_posts\栈溢出实例学习\2.PNG" alt=""></p>
+<p><img src="/2018/10/28/栈溢出实例学习/2.PNG" alt=""></p>
 </li>
 <li><p><code>PIE(ASLR)</code>:一般情况下<code>NX</code>（<code>Windows</code>平台上称其为<code>DEP</code>）和地址空间分布随机化（<code>ASLR</code>）会同时工作。内存地址随机化机制（<code>address space layout randomization</code>)，有以下三种情况</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">0 - 表示关闭进程地址空间随机化。</span><br><span class="line">1 - 表示将mmap的基址，stack和vdso页面随机化。</span><br><span class="line">2 - 表示在1的基础上增加栈（heap）的随机化。</span><br></pre></td></tr></table></figure>
@@ -104,7 +104,7 @@
 </li>
 </ul>
 <p>在利用程序在编译之前我们首先要关闭系统的<code>ASLR</code> 方法，<code>checksec</code>如下 所以：</p>
-<p><img src="/2018/10/28/栈溢出实例学习/D:/my first blog\blog\Hexo\source\_posts\栈溢出实例学习\3.PNG" alt=""></p>
+<p><img src="/2018/10/28/栈溢出实例学习/3.PNG" alt=""></p>
 <p>接下来，我们要如何利用该程序的漏洞呢，所以要做的是覆盖返回地址，即覆盖掉栈中的返回地址，从而让指令寄存器去执行我之前设定好的<code>shellcode</code>,在之前，我们先看下该段代码的反汇编代码</p>
 <p>有时间继续。。</p>
 
