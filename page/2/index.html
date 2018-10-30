@@ -59,6 +59,69 @@
 
   
     
+    <h3 class="article-title"><a href="/2018/04/11/关于恶意邮件TSCookie攻击的分析-1/"><span>关于恶意邮件TSCookie攻击的分析</span></a></h3>
+    
+  
+
+  <div class="article-top-meta">
+    <span class="posted-on">
+      <a href="/2018/04/11/关于恶意邮件TSCookie攻击的分析-1/" rel="bookmark">
+        <time class="entry-date published" datetime="2018-04-11T13:56:37.000Z">
+          2018-04-11
+        </time>
+      </a>
+    </span>
+  </div>
+
+
+  
+
+  <div class="article-content">
+    <div class="entry">
+      
+        <p>​       前段时间在安全客上看到了这个邮件病毒的介绍，然后就想着整理下对该恶意邮件的分析，好让自己对该攻击的过程有个深刻的理解。</p>
+<p>​       首先呢！对TSCookie做一下分析：TSCookie本身只充当下载器功能，可以从服务器中下载其他的模块，则恶意模块就能扩展自己的功能。TSCookie会下载一个DLL文件，这个DLL文件具备各种功能，其中就包括渗透功能(下文简TSCookieRAT) TSCookie刚开始时会发送一个HTTP GET请求，如下所示。发出去的消息经过编码处理，嵌入在头部中的Cookie字段。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">GET /Default.aspx HTTP/1.1</span><br><span class="line">Cache-Control: no-cache</span><br><span class="line">Connection: Keep-Alive</span><br><span class="line">Date: Thu, 18 Jan 2018 10:20:55 GMT</span><br><span class="line">Pragma: no-cache</span><br><span class="line">Accept: */*</span><br><span class="line">Cookie: 1405D7CD01C6978E54E86DA9525E1395C4DD2F276DD28EABCC3F6201ADAA66F55C15352D29D0FFE51BC9D431EB23E8E58959653D9366E372B5CFCC49BB</span><br><span class="line">User-Agent: Mozilla/4.0 (compatible; MSIE 8.0; Win32)</span><br><span class="line">Host:[host name]:443</span><br></pre></td></tr></table></figure>
+<p> Cookie字段中包含的信息也经过RC4加密处理过（加密密钥为头部中的Date字段值）。恶意软件会将下载的模块加载到内存中，然后调用HTTP GET请求所获取的加载器来执行这个模块。</p>
+<p><strong>TSCookie的行为分析</strong></p>
+<p>​       该TSCookie使用HTTP协议与服务器进行通信，也会下载一个“模块”以及用来加载模块的一个“加载器”。恶意软件在资源区中嵌入了一个加密的DLL文件。当恶意软件执行时，就会将该DLL文件加载到内存中并加以执行。DLL文件会执行一些主要函数，比如与C&amp;C服务器通信（某些情况下，主要函数并没有经过加密处理，会直接存放在恶意软件中。）</p>
+<p><strong>TSCookieRAT行为分析</strong></p>
+<p>​       TSCookie在加载TSCookieRAT时会附带一些参数，比如C&amp;C服务器信息等。在执行时，TSCookieRAT会通过HTTP POST请求将被感染主机的信息发送给外部服务器（HTTP头部格式与TSCookie的一样）。TSCookieRAT会发送一个HTTP GET请求（HTTP头部载荷格式与TSCookie一样）。</p>
+<p>​       通过这个请求，TSCookieRAT可以从C&amp;C服务器那接收命令，所执行的功能如下所示</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">1、执行任意shell命令</span><br><span class="line"></span><br><span class="line">2、发送磁盘驱动器信息</span><br><span class="line"></span><br><span class="line">3、发送系统信息</span><br><span class="line"></span><br><span class="line">4、文件操作</span><br><span class="line"></span><br><span class="line">5、收集IE、Edge、Firefox、Chrome以及Outlook的密码</span><br></pre></td></tr></table></figure>
+<p>命令执行的结果会发送给服务器，所使用的格式与第一个HTTP  POST请求一样。</p>
+
+      
+    </div>
+
+  </div>
+
+  <div class="article-footer">
+    <div class="article-meta pull-left">
+
+    
+
+    
+    
+
+    <span class="post-tags">
+      <i class="icon-tags"></i>
+        <a href="/tags/security/">security</a>
+    </span>
+    
+
+    </div>
+
+    
+  </div>
+</article>
+
+
+
+  <article>
+
+  
+    
     <h3 class="article-title"><a href="/2018/04/09/hello-world/"><span>Hello World</span></a></h3>
     
   
