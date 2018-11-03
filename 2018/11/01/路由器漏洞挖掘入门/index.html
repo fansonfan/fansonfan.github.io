@@ -1,0 +1,151 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>路由器漏洞挖掘入门 | fanson&#39;s Blog</title>
+
+  
+  <meta name="author" content="fanson">
+  
+
+  
+  <meta name="description" content="周末在家闲着，也趁着这个时间来入门学习下路由器漏洞挖掘！网上查阅的D-Link系列的漏洞也不少，那就从D-Link路由器漏洞开始学习，顺便刚好也好跟着创宇paper学习，就当是学习笔记了！
+一：准备工作
+binwalk:用来解开固件包
+路由器的固件：ftp://ftp2.dlink.com/PROD">
+  
+
+  
+  
+  <meta name="keywords" content="漏洞挖掘">
+  
+
+  <meta id="viewport" name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+  <meta property="og:title" content="路由器漏洞挖掘入门"/>
+
+  <meta property="og:site_name" content="fanson&#39;s Blog"/>
+
+  
+  <meta property="og:image" content="/favicon.ico"/>
+  
+
+  <link href="/favicon.ico" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="fanson&#39;s Blog" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+</head>
+
+
+<body>
+<div class="blog">
+  <div class="content">
+
+    <header>
+  <div class="site-branding">
+    <h1 class="site-title">
+      <a href="/">fanson&#39;s Blog</a>
+    </h1>
+    <p class="site-description"></p>
+  </div>
+  <nav class="site-navigation">
+    <ul>
+      
+        <li><a href="/">Home</a></li>
+      
+        <li><a href="/archives">Archives</a></li>
+      
+    </ul>
+  </nav>
+</header>
+
+    <main class="site-main posts-loop">
+    <article>
+
+  
+    
+    <h3 class="article-title"><span>路由器漏洞挖掘入门</span></h3>
+    
+  
+
+  <div class="article-top-meta">
+    <span class="posted-on">
+      <a href="/2018/11/01/路由器漏洞挖掘入门/" rel="bookmark">
+        <time class="entry-date published" datetime="2018-11-01T15:19:08.000Z">
+          2018-11-01
+        </time>
+      </a>
+    </span>
+  </div>
+
+
+  
+
+  <div class="article-content">
+    <div class="entry">
+      
+        <p>周末在家闲着，也趁着这个时间来入门学习下路由器漏洞挖掘！网上查阅的D-Link系列的漏洞也不少，那就从D-Link路由器漏洞开始学习，顺便刚好也好跟着<a href="https://paper.seebug.org/429/" target="_blank" rel="noopener">创宇paper</a>学习，就当是学习笔记了！</p>
+<h4 id="一：准备工作"><a href="#一：准备工作" class="headerlink" title="一：准备工作"></a>一：准备工作</h4><ul>
+<li><code>binwalk</code>:用来解开固件包</li>
+<li>路由器的固件：<a href="ftp://ftp2.dlink.com/PRODUCTS/" target="_blank" rel="noopener">ftp://ftp2.dlink.com/PRODUCTS/</a></li>
+</ul>
+<p>完成<code>binwalk</code>的安装后，”<code>binwalk -Me</code> 固件包名称”来解相对应的固件。</p>
+<h4 id="二：漏洞挖掘"><a href="#二：漏洞挖掘" class="headerlink" title="二：漏洞挖掘"></a>二：漏洞挖掘</h4><p>D-Link DIR-300 信息泄露漏洞</p>
+<p><a href="https://www.shodan.io/search?query=DIR-300" target="_blank" rel="noopener">shodan :DIR-300</a></p>
+<p>我们先下载<code>D-Link DIR-300</code>的固件并且解固件</p>
+<p><img src="/2018/11/01/路由器漏洞挖掘入门/D:/my first blog\blog\Hexo\source\_posts\路由器漏洞挖掘入门\1.PNG" alt=""></p>
+<p>在解固件之后，进入 <code>suashfs-root/www</code> 文件夹，漏洞出现在<code>/model/__show_info.php</code>文件。</p>
+<p><img src="/2018/11/01/路由器漏洞挖掘入门/D:/my first blog\blog\Hexo\source\_posts\路由器漏洞挖掘入门\2.PNG" alt=""></p>
+<p>这里看到已经禁止了<code>$REQUIRE_FILE</code>的参数为<code>var/etc/httpasswd</code>和<code>var/etc/hnapasswd</code>。这样的话看起来我们是无法获取账号密码的。那如果我们从根路径开始配置<code>httpasswd</code>的路径，那么是不是就可以绕过这个过滤了呢！</p>
+<p>payload：（<a href="https://paper.seebug.org/429/" target="_blank" rel="noopener">创宇</a>）</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">localhost/model/__show_info.php?REQUIRE_FILE=/<span class="keyword">var</span>/etc/httpasswd</span><br></pre></td></tr></table></figure>
+<p>这里设置<code>REQUIRE_FILE=/var/etc/httpasswd</code> 成功绕过上面的 <code>if</code>判断，进行任意文件读取。</p>
+<h4 id="三：参考"><a href="#三：参考" class="headerlink" title="三：参考"></a>三：参考</h4><p>【1】<a href="http://www.devttys0.com/wp-content/uploads/2010/12/dlink_php_vulnerability.pdf" target="_blank" rel="noopener">.http://www.devttys0.com/wp-content/uploads/2010/12/dlink_php_vulnerability.pdf</a></p>
+<p>【2】<a href="https://paper.seebug.org/429/" target="_blank" rel="noopener">https://paper.seebug.org/429/</a></p>
+
+      
+    </div>
+
+  </div>
+
+  <div class="article-footer">
+    <div class="article-meta pull-left">
+
+    
+
+    
+    
+
+    <span class="post-tags">
+      <i class="icon-tags"></i>
+        <a href="/tags/漏洞挖掘/">漏洞挖掘</a>
+    </span>
+    
+
+    </div>
+
+    
+  </div>
+</article>
+
+
+    </main>
+
+    <footer class="site-footer">
+  <p class="site-info">
+    Proudly powered by <a href="https://hexo.io/" target="_blank">Hexo</a> and
+    Theme by <a href="https://github.com/CodeDaraW/Hacker" target="_blank">Hacker</a>
+    </br>
+    
+    &copy; 2018 fanson
+    
+  </p>
+</footer>
+    
+  </div>
+</div>
+<script type="text/javascript" src="/js/src/love.js"></script>
+</body>
+</html>
