@@ -95,6 +95,20 @@
 <p>payload：（<a href="https://paper.seebug.org/429/" target="_blank" rel="noopener">创宇</a>）</p>
 <figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">localhost/model/__show_info.php?REQUIRE_FILE=/<span class="keyword">var</span>/etc/httpasswd</span><br></pre></td></tr></table></figure>
 <p>这里设置<code>REQUIRE_FILE=/var/etc/httpasswd</code> 成功绕过上面的 <code>if</code>判断，进行任意文件读取。</p>
+<p>D-Link DIR-645信息泄露漏洞</p>
+<p><a href="https://www.shodan.io/search?query=DIR-645" target="_blank" rel="noopener">shodan:DIR-645</a></p>
+<p>同样该漏洞出现在 <code>suashfs-root/htdocs</code> 文件夹<code>getcfg.php</code> 文件由于过滤不严格导致信息泄露漏洞</p>
+<p><img src="/2018/11/01/路由器漏洞挖掘入门/5.PNG" alt=""></p>
+<p>该代码中 <code>$GETCFG_SVC</code> 没有任何过滤直接获取了 POST 传递过来的<code>SERVICES</code>的值。如果<code>$GETCFG_SVC</code>不为空，则进行文件读取。这里我们就可以读取存储此设备信息的<code>DEVICE.ACCOUNT.xml.php</code>文件。</p>
+<p>payload：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">http://localhost/getcfg.php</span><br><span class="line">post:SERVICES=DEVICE.ACCOUNT</span><br></pre></td></tr></table></figure>
+<p>说了这么久了，实战走一波吧！</p>
+<p>进入D-Link DIR-645的web登录页面，则显示需要用户与密码则可登录，那么接下来我们来获取他们</p>
+<p><img src="/2018/11/01/路由器漏洞挖掘入门/6.PNG" alt=""></p>
+<p>利用payload打一波</p>
+<p><img src="/2018/11/01/路由器漏洞挖掘入门/3.PNG" alt=""></p>
+<p>果然，我们可以清楚地看到账号密码，继续登录验证，登录成功</p>
+<p><img src="/2018/11/01/路由器漏洞挖掘入门/4.PNG" alt=""></p>
 <h4 id="三：参考"><a href="#三：参考" class="headerlink" title="三：参考"></a>三：参考</h4><p>【1】<a href="http://www.devttys0.com/wp-content/uploads/2010/12/dlink_php_vulnerability.pdf" target="_blank" rel="noopener">.http://www.devttys0.com/wp-content/uploads/2010/12/dlink_php_vulnerability.pdf</a></p>
 <p>【2】<a href="https://paper.seebug.org/429/" target="_blank" rel="noopener">https://paper.seebug.org/429/</a></p>
 
