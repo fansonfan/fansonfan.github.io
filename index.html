@@ -88,9 +88,9 @@
 <h4 id="二：漏洞挖掘"><a href="#二：漏洞挖掘" class="headerlink" title="二：漏洞挖掘"></a>二：漏洞挖掘</h4><p>D-Link DIR-300 信息泄露漏洞</p>
 <p><a href="https://www.shodan.io/search?query=DIR-300" target="_blank" rel="noopener">shodan :DIR-300</a></p>
 <p>我们先下载<code>D-Link DIR-300</code>的固件并且解固件</p>
-<p><img src="/2018/11/01/路由器漏洞挖掘入门/D:/my first blog\blog\Hexo\source\_posts\路由器漏洞挖掘入门\1.PNG" alt=""></p>
+<p><img src="/2018/11/01/路由器漏洞挖掘入门/1.PNG" alt=""></p>
 <p>在解固件之后，进入 <code>suashfs-root/www</code> 文件夹，漏洞出现在<code>/model/__show_info.php</code>文件。</p>
-<p><img src="/2018/11/01/路由器漏洞挖掘入门/D:/my first blog\blog\Hexo\source\_posts\路由器漏洞挖掘入门\2.PNG" alt=""></p>
+<p><img src="/2018/11/01/路由器漏洞挖掘入门/2.PNG" alt=""></p>
 <p>这里看到已经禁止了<code>$REQUIRE_FILE</code>的参数为<code>var/etc/httpasswd</code>和<code>var/etc/hnapasswd</code>。这样的话看起来我们是无法获取账号密码的。那如果我们从根路径开始配置<code>httpasswd</code>的路径，那么是不是就可以绕过这个过滤了呢！</p>
 <p>payload：（<a href="https://paper.seebug.org/429/" target="_blank" rel="noopener">创宇</a>）</p>
 <figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">localhost/model/__show_info.php?REQUIRE_FILE=/<span class="keyword">var</span>/etc/httpasswd</span><br></pre></td></tr></table></figure>
