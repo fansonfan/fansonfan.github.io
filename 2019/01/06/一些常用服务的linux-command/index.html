@@ -1,0 +1,209 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>一些常用服务的linux-command | fanson&#39;s Blog</title>
+
+  
+  <meta name="author" content="fanson">
+  
+
+  
+  <meta name="description" content="telnet登录远程主机和管理(测试ip端口是否连通) 
+telnet命令 用于登录远程主机，对远程主机进行管理。telnet因为采用明文传送报文，安全性不好，很多Linux服务器都不开放telnet服务，而改用更安全的ssh方式了。但仍然有很多别的系统可能采用了telnet方式来提供远程登录，因此">
+  
+
+  
+  
+  <meta name="keywords" content="tools">
+  
+
+  <meta id="viewport" name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+  <meta property="og:title" content="一些常用服务的linux-command"/>
+
+  <meta property="og:site_name" content="fanson&#39;s Blog"/>
+
+  
+  <meta property="og:image" content="/favicon.ico"/>
+  
+
+  <link href="/favicon.ico" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="fanson&#39;s Blog" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+</head>
+
+
+<body>
+<div class="blog">
+  <div class="content">
+
+    <header>
+  <div class="site-branding">
+    <h1 class="site-title">
+      <a href="/">fanson&#39;s Blog</a>
+    </h1>
+    <p class="site-description"></p>
+  </div>
+  <nav class="site-navigation">
+    <ul>
+      
+        <li><a href="/">Home</a></li>
+      
+        <li><a href="/archives">Archives</a></li>
+      
+    </ul>
+  </nav>
+</header>
+
+    <main class="site-main posts-loop">
+    <article>
+
+  
+    
+    <h3 class="article-title"><span>一些常用服务的linux-command</span></h3>
+    
+  
+
+  <div class="article-top-meta">
+    <span class="posted-on">
+      <a href="/2019/01/06/一些常用服务的linux-command/" rel="bookmark">
+        <time class="entry-date published" datetime="2019-01-06T10:22:30.000Z">
+          2019-01-06
+        </time>
+      </a>
+    </span>
+  </div>
+
+
+  
+
+  <div class="article-content">
+    <div class="entry">
+      
+        <h1 id="telnet"><a href="#telnet" class="headerlink" title="telnet"></a>telnet</h1><p>登录远程主机和管理(测试ip端口是否连通) </p>
+<p><strong>telnet命令</strong> 用于登录远程主机，对远程主机进行管理。telnet因为采用明文传送报文，安全性不好，很多Linux服务器都不开放telnet服务，而改用更安全的ssh方式了。但仍然有很多别的系统可能采用了telnet方式来提供远程登录，因此弄清楚telnet客户端的使用方式仍是很有必要的。</p>
+<p><strong>语法：</strong></p>
+<p>telnet(选项)(参数) </p>
+<p><strong>选项</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">-8：允许使用8位字符资料，包括输入与输出；</span><br><span class="line">-a：尝试自动登入远端系统；</span><br><span class="line">-b&lt;主机别名&gt;：使用别名指定远端主机名称；</span><br><span class="line">-c：不读取用户专属目录里的.telnetrc文件；</span><br><span class="line">-d：启动排错模式；</span><br><span class="line">-e&lt;脱离字符&gt;：设置脱离字符；</span><br><span class="line">-E：滤除脱离字符；</span><br><span class="line">-f：此参数的效果和指定&quot;-F&quot;参数相同；</span><br><span class="line">-F：使用Kerberos V5认证时，加上此参数可把本地主机的认证数据上传到远端主机；</span><br><span class="line">-k&lt;域名&gt;：使用Kerberos认证时，加上此参数让远端主机采用指定的领域名，而非该主机的域名；</span><br><span class="line">-K：不自动登入远端主机；</span><br><span class="line">-l&lt;用户名称&gt;：指定要登入远端主机的用户名称；</span><br><span class="line">-L：允许输出8位字符资料；</span><br><span class="line">-n&lt;记录文件&gt;：指定文件记录相关信息；</span><br><span class="line">-r：使用类似rlogin指令的用户界面；</span><br><span class="line">-S&lt;服务类型&gt;：设置telnet连线所需的ip TOS信息；</span><br><span class="line">-x：假设主机有支持数据加密的功能，就使用它；</span><br><span class="line">-X&lt;认证形态&gt;：关闭指定的认证形态。</span><br></pre></td></tr></table></figure>
+<p><strong>参数</strong></p>
+<ul>
+<li>远程主机：指定要登录进行管理的远程主机；</li>
+<li>端口：指定TELNET协议使用的端口号。</li>
+</ul>
+<p><strong>实例</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">$ telnet 192.168.2.10</span><br><span class="line">Trying 192.168.2.10...</span><br><span class="line">Connected to 192.168.2.10 (192.168.2.10).</span><br><span class="line">Escape character is &apos;^]&apos;.</span><br><span class="line"></span><br><span class="line">    localhost (Linux release 2.6.18-274.18.1.el5 #1 SMP Thu Feb 9 12:45:44 EST 2012) (1)</span><br><span class="line"></span><br><span class="line">login: root</span><br><span class="line">Password:</span><br><span class="line">Login incorrect</span><br></pre></td></tr></table></figure>
+<p>一般情况下不允许root从远程登录，可以先用普通账号登录，然后再用su -切到root用户。 </p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">$ telnet 192.168.188.132</span><br><span class="line">Trying 192.168.188.132...</span><br><span class="line">telnet: connect to address 192.168.188.132: Connection refused</span><br><span class="line">telnet: Unable to connect to remote host</span><br></pre></td></tr></table></figure>
+<p>处理这种情况方法：</p>
+<ol>
+<li><p>确认ip地址是否正确？</p>
+</li>
+<li><p>确认ip地址对应的主机是否已经开机？</p>
+</li>
+<li><p>如果主机已经启动，确认路由设置是否设置正确？（使用route命令查看）</p>
+</li>
+<li><p>如果主机已经启动，确认主机上是否开启了telnet服务？（使用netstat命令查看，TCP的23端口是否有LISTEN状态的行）</p>
+</li>
+<li><p>如果主机已经启动telnet服务，确认防火墙是否放开了23端口的访问？（使用iptables-save查看）</p>
+<p><strong>启动telnet服务</strong></p>
+</li>
+</ol>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">service xinetd restart</span><br></pre></td></tr></table></figure>
+<p>配置参数，通常的配置如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">service telnet</span><br><span class="line">&#123;</span><br><span class="line">    disable = no #启用</span><br><span class="line">    flags = REUSE #socket可重用</span><br><span class="line">    socket_type = stream #连接方式为TCP</span><br><span class="line">    wait = no #为每个请求启动一个进程</span><br><span class="line">    user = root #启动服务的用户为root</span><br><span class="line">    server = /usr/sbin/in.telnetd #要激活的进程</span><br><span class="line">    log_on_failure += USERID #登录失败时记录登录用户名</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>如果要配置允许登录的客户端列表，加入</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">only_from = 192.168.0.2 #只允许192.168.0.2登录</span><br></pre></td></tr></table></figure>
+<p>如果要配置禁止登录的客户端列表，加入</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">no_access = 192.168.0.&#123;2,3,4&#125; #禁止192.168.0.2、192.168.0.3、192.168.0.4登录</span><br></pre></td></tr></table></figure>
+<p>如果要设置开放时段，加入</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">access_times = 9:00-12:00 13:00-17:00 # 每天只有这两个时段开放服务（我们的上班时间：P）</span><br></pre></td></tr></table></figure>
+<p>如果你有两个IP地址，一个是私网的IP地址如192.168.0.2，一个是公网的IP地址如218.75.74.83，如果你希望用户只能从私网来登录telnet服务，那么加入</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">bind = 192.168.0.2</span><br></pre></td></tr></table></figure>
+<p>各配置项具体的含义和语法可参考xined配置文件属性说明（man xinetd.conf）</p>
+<p>配置端口，修改services文件：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"># vi /etc/services</span><br></pre></td></tr></table></figure>
+<p>找到以下两句</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">telnet 23/tcp</span><br><span class="line">telnet 23/udp</span><br></pre></td></tr></table></figure>
+<p>如果前面有#字符，就去掉它。telnet的默认端口是23，这个端口也是黑客端口扫描的主要对象，因此最好将这个端口修改掉，修改的方法很简单，就是将23这个数字修改掉，改成大一点的数字，比如61123。注意，1024以下的端口号是internet保留的端口号，因此最好不要用，还应该注意不要与其它服务的端口冲突。</p>
+<p>启动服务：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">service xinetd restart</span><br></pre></td></tr></table></figure>
+<h1 id="ssh"><a href="#ssh" class="headerlink" title="ssh"></a>ssh</h1><p>openssh套件中的客户端连接工具</p>
+<p><strong>ssh命令</strong> 是openssh套件中的客户端连接工具，可以给予ssh加密协议实现安全的远程登录服务器。</p>
+<p><strong>语法</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ssh(选项)(参数)</span><br></pre></td></tr></table></figure>
+<p><strong>选项</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">-1：强制使用ssh协议版本1；</span><br><span class="line">-2：强制使用ssh协议版本2；</span><br><span class="line">-4：强制使用IPv4地址；</span><br><span class="line">-6：强制使用IPv6地址；</span><br><span class="line">-A：开启认证代理连接转发功能；</span><br><span class="line">-a：关闭认证代理连接转发功能；</span><br><span class="line">-b：使用本机指定地址作为对应连接的源ip地址；</span><br><span class="line">-C：请求压缩所有数据；</span><br><span class="line">-F：指定ssh指令的配置文件；</span><br><span class="line">-f：后台执行ssh指令；</span><br><span class="line">-g：允许远程主机连接主机的转发端口；</span><br><span class="line">-i：指定身份文件；</span><br><span class="line">-l：指定连接远程服务器登录用户名；</span><br><span class="line">-N：不执行远程指令；</span><br><span class="line">-o：指定配置选项；</span><br><span class="line">-p：指定远程服务器上的端口；</span><br><span class="line">-q：静默模式；</span><br><span class="line">-X：开启X11转发功能；</span><br><span class="line">-x：关闭X11转发功能；</span><br><span class="line">-y：开启信任X11转发功能。</span><br></pre></td></tr></table></figure>
+<p><strong>参数</strong></p>
+<ul>
+<li>远程主机：指定要连接的远程ssh服务器；</li>
+<li>指令：要在远程ssh服务器上执行的指令。</li>
+</ul>
+<p><strong>实例</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"># ssh 用户名@远程服务器地址</span><br><span class="line">ssh user1@172.24.210.101</span><br><span class="line"># 指定端口</span><br><span class="line">ssh -p 2211 root@140.206.185.170</span><br><span class="line"></span><br><span class="line"># ssh 大家族</span><br><span class="line">ssh user@ip -p22 # 默认用户名为当前用户名，默认端口为 22</span><br><span class="line">ssh-keygen # 为当前用户生成 ssh 公钥 + 私钥</span><br><span class="line">ssh-keygen -f keyfile -i -m key_format -e -m key_format # key_format: RFC4716/SSH2(default) PKCS8 PEM</span><br><span class="line">ssh-copy-id user@ip:port # 将当前用户的公钥复制到需要 ssh 的服务器的 ~/.ssh/authorized_keys，之后可以免密登录</span><br></pre></td></tr></table></figure>
+<h1 id="ftp"><a href="#ftp" class="headerlink" title="ftp"></a>ftp</h1><p>用来设置文件系统相关功能</p>
+<p><strong>ftp命令</strong> 用来设置文件系统相关功能。ftp服务器在网上较为常见，Linux ftp命令的功能是用命令的方式来控制在本地机和远程机之间传送文件，这里详细介绍Linux ftp命令的一些经常使用的命令，相信掌握了这些使用Linux进行ftp操作将会非常容易。</p>
+<p><strong>语法</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ftp(选项)(参数)</span><br></pre></td></tr></table></figure>
+<p><strong>选项</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">-d：详细显示指令执行过程，便于排错或分析程序执行的情况；</span><br><span class="line">-i：关闭互动模式，不询问任何问题；</span><br><span class="line">-g：关闭本地主机文件名称支持特殊字符的扩充特性；</span><br><span class="line">-n：不使用自动登录；</span><br><span class="line">-v：显示指令执行过程。</span><br></pre></td></tr></table></figure>
+<p><strong>参数</strong></p>
+<p>主机：指定要连接的FTP服务器的主机名或ip地址。</p>
+<p><strong>实例</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line">ftp&gt; ascii  # 设定以ASCII方式传送文件(缺省值) </span><br><span class="line">ftp&gt; bell   # 每完成一次文件传送,报警提示. </span><br><span class="line">ftp&gt; binary # 设定以二进制方式传送文件. </span><br><span class="line">ftp&gt; bye    # 终止主机FTP进程,并退出FTP管理方式. </span><br><span class="line">ftp&gt; case   # 当为ON时,用MGET命令拷贝的文件名到本地机器中,全部转换为小写字母. </span><br><span class="line">ftp&gt; cd     # 同UNIX的CD命令. </span><br><span class="line">ftp&gt; cdup   # 返回上一级目录. </span><br><span class="line">ftp&gt; chmod  # 改变远端主机的文件权限. </span><br><span class="line">ftp&gt; close  # 终止远端的FTP进程,返回到FTP命令状态, 所有的宏定义都被删除. </span><br><span class="line">ftp&gt; delete # 删除远端主机中的文件. </span><br><span class="line">ftp&gt; dir [remote-directory] [local-file] # 列出当前远端主机目录中的文件.如果有本地文件,就将结果写至本地文件. </span><br><span class="line">ftp&gt; get [remote-file] [local-file] # 从远端主机中传送至本地主机中. </span><br><span class="line">ftp&gt; help [command] # 输出命令的解释. </span><br><span class="line">ftp&gt; lcd # 改变当前本地主机的工作目录,如果缺省,就转到当前用户的HOME目录. </span><br><span class="line">ftp&gt; ls [remote-directory] [local-file] # 同DIR. </span><br><span class="line">ftp&gt; macdef                 # 定义宏命令. </span><br><span class="line">ftp&gt; mdelete [remote-files] # 删除一批文件. </span><br><span class="line">ftp&gt; mget [remote-files]    # 从远端主机接收一批文件至本地主机. </span><br><span class="line">ftp&gt; mkdir directory-name   # 在远端主机中建立目录. </span><br><span class="line">ftp&gt; mput local-files # 将本地主机中一批文件传送至远端主机. </span><br><span class="line">ftp&gt; open host [port] # 重新建立一个新的连接. </span><br><span class="line">ftp&gt; prompt           # 交互提示模式. </span><br><span class="line">ftp&gt; put local-file [remote-file] # 将本地一个文件传送至远端主机中. </span><br><span class="line">ftp&gt; pwd  # 列出当前远端主机目录. </span><br><span class="line">ftp&gt; quit # 同BYE. </span><br><span class="line">ftp&gt; recv remote-file [local-file] # 同GET. </span><br><span class="line">ftp&gt; rename [from] [to]     # 改变远端主机中的文件名. </span><br><span class="line">ftp&gt; rmdir directory-name   # 删除远端主机中的目录. </span><br><span class="line">ftp&gt; send local-file [remote-file] # 同PUT. </span><br><span class="line">ftp&gt; status   # 显示当前FTP的状态. </span><br><span class="line">ftp&gt; system   # 显示远端主机系统类型. </span><br><span class="line">ftp&gt; user user-name [password] [account] # 重新以别的用户名登录远端主机. </span><br><span class="line">ftp&gt; ? [command] # 同HELP. [command]指定需要帮助的命令名称。如果没有指定 command，ftp 将显示全部命令的列表。</span><br><span class="line">ftp&gt; ! # 从 ftp 子系统退出到外壳。</span><br></pre></td></tr></table></figure>
+<p>关闭FTP连接</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">bye</span><br><span class="line">exit</span><br><span class="line">quit</span><br></pre></td></tr></table></figure>
+<p>下载文件</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ftp&gt; get readme.txt # 下载 readme.txt 文件</span><br><span class="line">ftp&gt; mget *.txt     # 下载</span><br></pre></td></tr></table></figure>
+<p>上传文件</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ftp&gt; put /path/readme.txt # 上传 readme.txt 文件</span><br><span class="line">ftp&gt; mput *.txt           # 可以上传多个文件</span><br></pre></td></tr></table></figure>
+<p>内容来自【<a href="https://wangchujiang.com/linux-command/c/ssh.html】整理为笔记以记之" target="_blank" rel="noopener">https://wangchujiang.com/linux-command/c/ssh.html】整理为笔记以记之</a></p>
+
+      
+    </div>
+
+  </div>
+
+  <div class="article-footer">
+    <div class="article-meta pull-left">
+
+    
+
+    
+    
+
+    <span class="post-tags">
+      <i class="icon-tags"></i>
+        <a href="/tags/tools/">tools</a>
+    </span>
+    
+
+    </div>
+
+    
+  </div>
+</article>
+
+
+    </main>
+
+    <footer class="site-footer">
+  <p class="site-info">
+    Proudly powered by <a href="https://hexo.io/" target="_blank">Hexo</a> and
+    Theme by <a href="https://github.com/CodeDaraW/Hacker" target="_blank">Hacker</a>
+    </br>
+    
+    &copy; 2019 fanson
+    
+  </p>
+</footer>
+    
+  </div>
+</div>
+<script type="text/javascript" src="/js/src/love.js"></script>
+</body>
+</html>

