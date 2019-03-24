@@ -59,6 +59,128 @@
 
   
     
+    <h3 class="article-title"><a href="/2019/03/23/Wordpress-4-6-1-Stored-XSS-Via-Theme-File/"><span>Wordpress &lt;= 4.6.1 Stored XSS Via Theme File</span></a></h3>
+    
+  
+
+  <div class="article-top-meta">
+    <span class="posted-on">
+      <a href="/2019/03/23/Wordpress-4-6-1-Stored-XSS-Via-Theme-File/" rel="bookmark">
+        <time class="entry-date published" datetime="2019-03-23T10:16:44.000Z">
+          2019-03-23
+        </time>
+      </a>
+    </span>
+  </div>
+
+
+  
+
+  <div class="article-content">
+    <div class="entry">
+      
+        <p><em>Wordpress &lt;= 4.6.1 Stored XSS 漏洞复现</em></p>
+<blockquote>
+<p>我多想再见你<br>哪怕匆匆一眼</p>
+</blockquote>
+<p>​    发现自己对web漏洞的一些点理解的还是不够深。所以准备复现一波web漏洞，加深自己对一些点的理解深度和巩固下知识！</p>
+<p>0x00 漏洞概述</p>
+<p>​    首先，我们来了解下<code>wordresss</code>，<a href="https://wordpress.org/" target="_blank" rel="noopener">WordPress</a>是一个以<code>PHP</code>和<code>MySQL</code>为平台的自由开源的博客软件和内容管理系统，<code>WordPress</code>具有插件架构和模板系统，截至2018年4月，排名前1000万的网站超过30.6%使用<code>WordPress</code><a href="https://zh.wikipedia.org/wiki/WordPress#cite_note-6" target="_blank" rel="noopener">[1]</a>。<code>WordPress</code>是最受欢迎的网站<a href="https://zh.wikipedia.org/wiki/%E5%86%85%E5%AE%B9%E7%AE%A1%E7%90%86%E7%B3%BB%E7%BB%9F" target="_blank" rel="noopener">内容管理系统</a>，<code>WordPress</code>在最着名的网络发布阶段中脱颖而出。如今，它被使用在超过7000万个站点上。</p>
+<p>​    <code>WordPress</code>用户可以安装和切换主题。主题可让用户不改变博客内容和结构的情况下更改界面和<code>WordPress</code>站点的功能。主题可以在<code>WordPress</code>的“外观”管理工具中安装，或者通过<code>FTP</code>上传至主题文件夹。也可以通过编辑主题中的<code>PHP</code>和<code>HTML</code>代码自定义主题。而漏洞是一个后台存储型<code>XSS</code>漏洞，可以通过上传恶意构造的主题文件来触发。【上述内容来自维基百科】</p>
+<p>0x01 环境搭建</p>
+<p>​    本来这个环境是很容易的搭的啊，但刚开始就是一直报错，到最后一直改了又改，最终还是</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker: Error response from daemon: Cannot link to a non running container</span><br></pre></td></tr></table></figure>
+<p>到最后一直改了又改，最终还是报错，无奈重新搭建，果然重建是第一生产力。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">docker exec -it 0027a12dab6d /bin/bash  </span><br><span class="line">vim /etc/mysql/conf.d/mysql.cnf</span><br><span class="line">Redhat停止防火墙：service iptables stop</span><br><span class="line">Ubuntu停止防火墙：ufw disable</span><br></pre></td></tr></table></figure>
+<p>最后终于搭建完成，命令如下</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">docker pull wordpress:4.6.1</span><br><span class="line">docker pull mysql</span><br><span class="line">docker run --name wp-mysql -e MYSQL_ROOT_PASSWORD=fans0n -d mysql</span><br><span class="line">docker run --name wp-wordpress --link wp-mysql:mysql -p 8080:80 -d wordpress:4.6.1</span><br></pre></td></tr></table></figure>
+<p>0x02 漏洞复现</p>
+<p>​    首先，我们先下载一个主题</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">wget https://downloads.wordpress.org/theme/illdy.1.0.29.zip</span><br><span class="line">unzip -x illdy.1.0.29.zip</span><br></pre></td></tr></table></figure>
+<p>​    并且对其<code>illdy/style.css</code>进行如下更改：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">/*</span><br><span class="line">Theme Name: &lt;svg onload=alert(1234)&gt;</span><br><span class="line">*/</span><br></pre></td></tr></table></figure>
+<p><img src="/2019/03/23/Wordpress-4-6-1-Stored-XSS-Via-Theme-File/theme-n.PNG" alt=""></p>
+<p>​    接着更改文件夹名字再打包：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">mv illdy &quot;&lt;svg onload=alert(fans0n)&gt;&quot;</span><br><span class="line">zip -r theme.zip &quot;&lt;svg onload=alert(fans0n)&gt;&quot;</span><br></pre></td></tr></table></figure>
+<p>​    <img src="/2019/03/23/Wordpress-4-6-1-Stored-XSS-Via-Theme-File/theme.PNG" alt=""><img src="/2019/03/23/Wordpress-4-6-1-Stored-XSS-Via-Theme-File/themeChange.PNG" alt=""></p>
+<p>​    构造好之后我们登录后台上传该主题文件，同时开始动态调试。</p>
+
+      
+    </div>
+
+  </div>
+
+  <div class="article-footer">
+    <div class="article-meta pull-left">
+
+    
+
+    
+    
+
+    <span class="post-tags">
+      <i class="icon-tags"></i>
+        <a href="/tags/websec/">websec</a>
+    </span>
+    
+
+    </div>
+
+    
+  </div>
+</article>
+
+
+
+  <article>
+
+  
+    
+    <h3 class="article-title"><a href="/2019/03/22/ctf-姿势/"><span>ctf-姿势</span></a></h3>
+    
+  
+
+  <div class="article-top-meta">
+    <span class="posted-on">
+      <a href="/2019/03/22/ctf-姿势/" rel="bookmark">
+        <time class="entry-date published" datetime="2019-03-22T14:03:22.000Z">
+          2019-03-22
+        </time>
+      </a>
+    </span>
+  </div>
+
+
+  
+
+  <div class="article-content">
+    <div class="entry">
+      
+        
+      
+    </div>
+
+  </div>
+
+  <div class="article-footer">
+    <div class="article-meta pull-left">
+
+    
+
+    
+
+    </div>
+
+    
+  </div>
+</article>
+
+
+
+  <article>
+
+  
+    
     <h3 class="article-title"><a href="/2019/03/03/Pwn/"><span>Pwn</span></a></h3>
     
   
@@ -819,193 +941,6 @@
     <span class="post-tags">
       <i class="icon-tags"></i>
         <a href="/tags/fuzz-tools/">fuzz tools</a>
-    </span>
-    
-
-    </div>
-
-    
-  </div>
-</article>
-
-
-
-  <article>
-
-  
-    
-    <h3 class="article-title"><a href="/2018/09/28/读书笔记/"><span>读书笔记</span></a></h3>
-    
-  
-
-  <div class="article-top-meta">
-    <span class="posted-on">
-      <a href="/2018/09/28/读书笔记/" rel="bookmark">
-        <time class="entry-date published" datetime="2018-09-28T15:17:36.000Z">
-          2018-09-28
-        </time>
-      </a>
-    </span>
-  </div>
-
-
-  
-
-  <div class="article-content">
-    <div class="entry">
-      
-        <p>读《程序员的自我修养》记录</p>
-<p>三个关键部位 ：中央处理器CPU  内存和I/O控制芯片</p>
-<p>为了能够让CPU能够和I/O设备进行通信，每个设备都会有一个I/O控制器</p>
-<p>南桥/北桥：由于北桥运行的速度非常高，所有相对低速的设备如果全都直接连接在北桥上，北桥既须处理高速设备，又须处理低速设备，设计就会十分复杂，于是人们又设计了专门处理低速设备的南桥芯片，磁盘，USB，键盘，鼠标等设备都连接在南桥上，由南桥将他们汇总后链接在北桥上。</p>
-<p>对称多处理器（SMP）:(多个CPU)，每个CPU在系统中所处的地位和发挥的功能都是一样的，是相互对称的。理论上讲，增加CPU的数量就可以提高运算速度，并且理想情况下，速度的提高与CPU的数量成正比。但实际并非如此，因为我们的程序并不都能分解成若干的完全不相干的子问题，就比如一个女生可以花10个月生出一个孩子，但是十个女生并不能在一个月就生出一个孩子一样。</p>
-<p>多核处理器：多个处理器共享一个缓存部件，其实为简化版SMP</p>
-<p>‘’计算机科学领域的任何问题都可以通过增加一个间接的中间层来解决。’’</p>
-<p>计算机软件体系结构（图）</p>
-<p>接口：满足每个层次之间的相互通信的通信的协议</p>
-<p>虚拟机技术：在硬件与操作系统之间增加了一层虚拟层，使得一个计算机上可以同时运行多个操作系统。</p>
-<p>系统调用接口在实现中往往以软件中断的方式提供，eg:Linux使用0x80号中断作为系统调用接口；windows使用0x2E号中断作为系统调用接口（Windows XP Sp2开始，windows开始采用一种新的系统调用方式）。</p>
-<p>分时系统：每个程序运行一段时间以后都主动让出CPU给其他程序，使得一段时间内每个程序都有机会运行一小段时间。</p>
-<p>多任务系统：操作系统接管了所有的硬件资源，并且本身运行在一个受硬件保护的级别。所有的应用程序都以进程的方式运行在比操作系统权限更低的级别，每个进程都有自己独立的地址空间，是得进程之间的地址空间相互隔离。</p>
-<p>抢占式：操作系统可以强制剥夺CPU资源并且分配给它认为目前最需要的进程。</p>
-<p>磁盘寻址：</p>
-<p>如何找到我们想要的数据呢？即如何在硬盘上找到任意一个物理地址。</p>
-<p>1）CHS模式（Cylinder/Head/Sector）  就是给定柱面号、磁头号、扇区号。柱面号给定在哪一个圆环上，磁头号指定了在哪一层，扇区号指定了圆上的位置，于是就定位到了一个准确的扇区了。  2）LBA（Logical Block Addressing，逻辑块寻址）  就是只给一个逻辑号码，根据硬盘的柱面数、每个柱面的磁头数、每个磁道的扇区数来计算柱面号、磁头号、扇区号。  编号方法：  按照柱面、磁头、扇区顺序来编，即编完0号柱面0号磁头所在磁道的若干扇区后，再编0号柱面1号磁头所在磁道的所以扇区，编完0号柱面的所有磁头后再编1号柱面。   </p>
-<p>3）相互转换  LBA = （柱面号 <em> 一个柱面的磁头数 + 磁头号） </em> 一个磁道上的扇区数 + （扇区号-1）   柱面号 = LBA / （一个柱面的磁头数 <em> 每个磁道扇区数）  令   x = LBA % （一个柱面的磁头数 </em> 每个磁道扇区数）  磁头号 = x / 每个磁道上的扇区数  扇区号 = x % 每个磁道上的扇区数 + 1 </p>
-<p><a href="https://blog.csdn.net/guzhou_diaoke/article/details/8479033" target="_blank" rel="noopener">https://blog.csdn.net/guzhou_diaoke/article/details/8479033</a></p>
-<p>2018.10.2</p>
-<p>内存使用效率：</p>
-<p>分页：程序在一段时间段内都是不会被用到的，用更小粒度的内存分割和映射的方法，使得程序的局部性原理得到充分的利用，大大提高了内存的使用率，这种方法就是分页。</p>
-<p>线程：（或称）轻量级进程，是程序执行流的最小单元，标准线程=线程ID+当前指令指针pc+寄存器集合+堆栈</p>
-<p>通常一个进程=多个线程</p>
-<p>​      线程的访问非常的自由，它可以访问进程内存里的所有数据，甚至包括其他进程的堆栈（如果他知道其他进程的堆栈地址，那么这种就是很少见的情况）但实际运用中线程也拥有自己的私有存储空间，包括以下几个方面：</p>
-<ul>
-<li>栈：（尽管并非完全无法被其他线程访问，一般情况下仍然可以认为是私有的数据）</li>
-<li>线程局部存储（TLS）:是某些操作系统为线程单独提供的私有空间，但通常只是有限的容量</li>
-<li>寄存器（包括pc寄存器）：寄存器是执行流的基本数据，因此为线程私有。</li>
-</ul>
-<p>IO密集型线程：频繁等待的线程；</p>
-<p>CPU密集线程：很少等待的线程；</p>
-<p>IO密集型线程总比CPU型密集型线程容易得到优先级的提升；</p>
-<p>线程优先级改变一般有三种方式：</p>
-<ul>
-<li>用户指定优先级</li>
-<li>根据进入等待状态的频繁程度提升或降低优先级</li>
-<li>长时间得不到执行而被提升优先级</li>
-</ul>
-<p>写时复制：指的是两个任务可以同时自由的读取内存，但任意一个任务试图对内存进行修改时，内存就会复制一份提供给修改方单独使用，以免影响到其他的任务使用。</p>
-<p>fork与exec通常用于产生新任务，而如果要产生新线程，则可以使用clone</p>
-<p>原子操作：windows里有一套API,专门进行一些原子操作（interlocked API）</p>
-
-      
-    </div>
-
-  </div>
-
-  <div class="article-footer">
-    <div class="article-meta pull-left">
-
-    
-
-    
-    
-
-    <span class="post-tags">
-      <i class="icon-tags"></i>
-        <a href="/tags/books/">books</a>
-    </span>
-    
-
-    </div>
-
-    
-  </div>
-</article>
-
-
-
-  <article>
-
-  
-    
-    <h3 class="article-title"><a href="/2018/09/26/定个任务书单吧/"><span>定个booklist任务吧</span></a></h3>
-    
-  
-
-  <div class="article-top-meta">
-    <span class="posted-on">
-      <a href="/2018/09/26/定个任务书单吧/" rel="bookmark">
-        <time class="entry-date published" datetime="2018-09-26T15:52:59.000Z">
-          2018-09-26
-        </time>
-      </a>
-    </span>
-  </div>
-
-
-  
-
-  <div class="article-content">
-    <div class="entry">
-      
-        <h2 id="BookList："><a href="#BookList：" class="headerlink" title="BookList："></a>BookList：</h2><p>一号之前吧，给自己列一个书籍清单！监督自己赶年前（标*的）完成这些。。。。</p>
-<p>二进制：</p>
-<p>《深入理解Linux内核》*</p>
-<p>《Linux内核设计与实现》*</p>
-<p>《Linux内核源代码情景分析》*</p>
-<p>《windows内核情景分析》*</p>
-<p>《windows内核原理与实现》*</p>
-<p>《寒江独钓:windows内核安全编程》*</p>
-<p>《模糊测试-强制性安全漏洞发掘》*</p>
-<p>技巧类</p>
-<p>《黑客攻防技术宝典-系统实战篇》 人民邮电出版社</p>
-<p>《reverse C++》</p>
-<p>《c++反汇编与逆向分析技术揭秘》</p>
-<p>《格蠢汇编：软件调试案例》</p>
-<p>《黑客攻防技术宝典-系统实战篇》 人民邮电出版社</p>
-<p>《0day安全：软件漏洞分析技术》 电子工业出版社</p>
-<p>《漏洞战争-软件漏洞分析精要》 电子工业出版社</p>
-<p>《逆向工程核心原理》人民邮电出版社</p>
-<p>《加密与解密》</p>
-<p>《IDA Pro权威指南》</p>
-<p>《reverse engineering for beginners》</p>
-<p>编程：</p>
-<p>《Python灰帽子-黑客与逆向工程的python编程之道》*</p>
-<p>《Python自动化运维：技术与最佳实践》</p>
-<p>《精通黑客脚本》</p>
-<p>《window核心编程》*</p>
-<p>扩展：</p>
-<p>《游戏外挂开放艺术》</p>
-<p>《捉虫日记》</p>
-<p>《黑客免杀》</p>
-<p>《恶意代码分析》</p>
-<p>《安全软件开发之道》</p>
-<p>《模糊测试-强制性安全漏洞发掘》</p>
-<p>《灰帽黑客：正义黑客的道德规范、渗透测试、攻击方法和漏洞分析技术》</p>
-<p>出来混，迟早是要还的。。。</p>
-<p>欠的书，迟早是要读的。。。</p>
-<h4 id="附：BookList"><a href="#附：BookList" class="headerlink" title="附：BookList"></a>附：BookList</h4><p><a href="https://github.com/DerekLoveCC/BookList#%E7%99%BD%E5%B8%BD%E5%AD%90%E8%AE%B2%E6%B5%8F%E8%A7%88%E5%99%A8%E5%AE%89%E5%85%A8" target="_blank" rel="noopener">https://github.com/DerekLoveCC/BookList#%E7%99%BD%E5%B8%BD%E5%AD%90%E8%AE%B2%E6%B5%8F%E8%A7%88%E5%99%A8%E5%AE%89%E5%85%A8</a></p>
-<h4 id="一系列编程算法书单"><a href="#一系列编程算法书单" class="headerlink" title="一系列编程算法书单"></a>一系列编程算法书单</h4><p><a href="https://github.com/HongYiMU/TheAlgorithm" target="_blank" rel="noopener">https://github.com/HongYiMU/TheAlgorithm</a></p>
-<p><a href="https://github.com/knownsec/RD_Checklist/blob/master/special/index.rst" target="_blank" rel="noopener">https://github.com/knownsec/RD_Checklist/blob/master/special/index.rst</a></p>
-<h4 id="一系列用于Fuzzing学习的资源汇总"><a href="#一系列用于Fuzzing学习的资源汇总" class="headerlink" title="一系列用于Fuzzing学习的资源汇总"></a>一系列用于Fuzzing学习的资源汇总</h4><p><a href="http://www.freebuf.com/articles/rookie/169413.html" target="_blank" rel="noopener">http://www.freebuf.com/articles/rookie/169413.html</a></p>
-<p><a href="https://github.com/secfigo/Awesome-Fuzzing" target="_blank" rel="noopener">https://github.com/secfigo/Awesome-Fuzzing</a></p>
-
-      
-    </div>
-
-  </div>
-
-  <div class="article-footer">
-    <div class="article-meta pull-left">
-
-    
-
-    
-    
-
-    <span class="post-tags">
-      <i class="icon-tags"></i>
-        <a href="/tags/书籍/">书籍</a>
     </span>
     
 

