@@ -1,0 +1,214 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>linux下的/etc/passwd&amp;&amp;/etc/shadow | fanson&#39;s Blog</title>
+
+  
+  <meta name="author" content="fanson">
+  
+
+  
+  <meta name="description" content="你会不会突然的出现，在街角的咖啡店！
+
+最近有遇到对/etc/shadow中的密码进行爆破问题，但是却没有成功，之前记得也有过总结这个，却找不到了。无奈就过来再记录下，以免下次查阅！
+/etc/passwd
+/etc/passwd是系统识别用户的一个文件，这个文件存放着所有用户账号的信息。其中当然包">
+  
+
+  
+  
+  <meta name="keywords" content="linux">
+  
+
+  <meta id="viewport" name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+  <meta property="og:title" content="linux下的/etc/passwd&amp;&amp;/etc/shadow"/>
+
+  <meta property="og:site_name" content="fanson&#39;s Blog"/>
+
+  
+  <meta property="og:image" content="/favicon.ico"/>
+  
+
+  <link href="/favicon.ico" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="fanson&#39;s Blog" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+</head>
+
+
+<body>
+<div class="blog">
+  <div class="content">
+
+    <header>
+  <div class="site-branding">
+    <h1 class="site-title">
+      <a href="/">fanson&#39;s Blog</a>
+    </h1>
+    <p class="site-description"></p>
+  </div>
+  <nav class="site-navigation">
+    <ul>
+      
+        <li><a href="/">Home</a></li>
+      
+        <li><a href="/archives">Archives</a></li>
+      
+    </ul>
+  </nav>
+</header>
+
+    <main class="site-main posts-loop">
+    <article>
+
+  
+    
+    <h3 class="article-title"><span>linux下的/etc/passwd&amp;&amp;/etc/shadow</span></h3>
+    
+  
+
+  <div class="article-top-meta">
+    <span class="posted-on">
+      <a href="/2019/03/26/linux下的-etc-password-etc-shadow/" rel="bookmark">
+        <time class="entry-date published" datetime="2019-03-26T14:27:48.000Z">
+          2019-03-26
+        </time>
+      </a>
+    </span>
+  </div>
+
+
+  
+
+  <div class="article-content">
+    <div class="entry">
+      
+        <blockquote>
+<p>你会不会突然的出现，在街角的咖啡店！</p>
+</blockquote>
+<p>最近有遇到对<code>/etc/shadow</code>中的密码进行爆破问题，但是却没有成功，之前记得也有过总结这个，却找不到了。无奈就过来再记录下，以免下次查阅！</p>
+<p><strong><em>/etc/passwd</em></strong></p>
+<p>/etc/passwd是系统识别用户的一个文件，这个文件存放着所有用户账号的信息。其中当然包括账号与密码。当我们以root这个账号登录时，系统首先会查阅 /etc/passwd 文件，看是否有root这个账号，然后确定root的UID，通过UID 来确认用户和身份。</p>
+<p>/etc/passwd的文件内容：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">root权限下执行查看</span><br><span class="line">＃ cat /etc/passwd</span><br><span class="line"></span><br><span class="line">root:x:0:0:root:/root:/bin/bash</span><br><span class="line">daemon:x:1:1:System daemons:/etc:</span><br><span class="line">bin:x:2:2:Owner of system commands:/bin:</span><br><span class="line">sys:x:3:3:Owner of system files:/usr/sys:</span><br><span class="line">adm:x:4:4:System accounting:/usr/adm:</span><br><span class="line">uucp:x:5:5:UUCP administrator:/usr/lib/uucp:</span><br><span class="line">auth:x:7:21:Authentication administrator:/tcb/files/auth:</span><br><span class="line">cron:x:9:16:Cron daemon:/usr/spool/cron:</span><br><span class="line">listen:x:37:4:Network daemon:/usr/net/nls:</span><br><span class="line">lp:x:71:18:Printer administrator:/usr/spool/lp:</span><br><span class="line">sam:x:200:50:Sam san:/usr/sam:/bin/sh</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">root:x:0:0:root:/root:/bin/bash</span><br><span class="line">用户名:密码:用户ID:组ID:用户描述:主目录:shell</span><br></pre></td></tr></table></figure>
+<p>系统中有一类用户称为伪用户（<code>psuedo users</code>），这些用户在<code>/etc/passwd</code>文件中也占有一条记录，但是不能登录，因为它们的登录<code>Shell</code>为空。它们的存在主要是方便系统管理，满足相应的系统进程对文件属主的要求。常见的伪用户如下：</p>
+<table>
+<thead>
+<tr>
+<th><strong>bin</strong></th>
+<th><strong>拥有可执行的用户命令文件</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>sys</strong></td>
+<td><strong>拥有系统文件</strong></td>
+</tr>
+<tr>
+<td><strong>adm</strong></td>
+<td><strong>拥有帐户文件</strong></td>
+</tr>
+<tr>
+<td><strong>uucp</strong></td>
+<td><strong>UUCP使用 </strong></td>
+</tr>
+<tr>
+<td><strong>lp</strong></td>
+<td><strong>lp或lpd子系统使用</strong></td>
+</tr>
+<tr>
+<td><strong>nobody</strong></td>
+<td><strong>NFS使用</strong></td>
+</tr>
+</tbody>
+</table>
+<p>除了上面列出的伪用户外，还有许多标准的伪用户，例如：audit, cron, mail, usenet等，它们也都各自为相关的进程和文件所需要。</p>
+<p><strong><em>/etc/shadow</em></strong></p>
+<p>由于/etc/passwd文件是所有用户都可读的，如果用户的密码太简单或规律比较明显的话，一台普通的计算机就能够很容易地将它破解，因此对安全性要求较高的Linux系统都把加密后的口令字分离出来，单独存放在一个文件中，这个文件是/etc/shadow文件。 有超级用户才拥有该文件读权限，这就保证了用户密码的安全性。</p>
+<p>【<code>/etc/shadow中的记录行与/etc/passwd中的一一对应，它由pwconv命令根据/etc/passwd中的数据自动产生</code>】</p>
+<p>它的文件格式与/etc/passwd类似，具体如下</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">＃ cat /etc/shadow</span><br><span class="line"></span><br><span class="line">root:Dnakfw28zf38w:8764:0:168:7:::</span><br><span class="line">daemon:*::0:0::::</span><br><span class="line">bin:*::0:0::::</span><br><span class="line">sys:*::0:0::::</span><br><span class="line">adm:*::0:0::::</span><br><span class="line">uucp:*::0:0::::</span><br><span class="line">nuucp:*::0:0::::</span><br><span class="line">auth:*::0:0::::</span><br><span class="line">cron:*::0:0::::</span><br><span class="line">listen:*::0:0::::</span><br><span class="line">lp:*::0:0::::</span><br><span class="line">sam:EkdiSECLWPdSa:9740:0:0::::</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">root:$36zQdAHKBxYr1lSPP26x1IhP6bOAigu7qO1ENtsyfxtU6hHvMdQMrgfxKhJ/ltkgAYwqA45ps/2HTF6saI/6gzLe7sF6kr1:16596:0:99999:6:::</span><br><span class="line">登录名:加密口令:最后一次修改时间:最小时间间隔:最大时间间隔:警告时间:不活动时间:失效时间:标志</span><br></pre></td></tr></table></figure>
+<p>后三个一般是没有的</p>
+<p><strong>“加密口令”字段存放的是加密[MD5,SHA-256,SHA-512]后的用户口令字，长度为13个字符。如果为空，则对应用户没有口令，登录时不需要口令；如果含有不属于集合 { ./0-9A-Za-z }中的字符，则对应的用户不能登录。</strong></p>
+<p><strong><em>密码爆破</em></strong></p>
+<p>最后介绍下如何爆破，我们先来了解下<code>linux</code>系统密码加密的原理：</p>
+<p>密文由3部分组成，以”$”分隔，第一部分为ID(用来表示加密的方法)，第二部分为盐值，第三部分为加密密文</p>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>加密方法</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>MD5</td>
+</tr>
+<tr>
+<td>5</td>
+<td>SHA-256</td>
+</tr>
+<tr>
+<td>6</td>
+<td>SHA-512</td>
+</tr>
+</tbody>
+</table>
+<p>盐值：盐值就是使用随机字符码混合密码加密算法所产生的密码，作用就是即使是同一个密码，使用同一种加密方式，所产生的密文值也不同 。</p>
+<p>工具爆破：<code>John the Ripper (“JtR”)</code> 是一个非常有用的工具。这是一个快速的密码破解器，适用于<code>Windows</code>和许多<code>Linux</code>系统。它具有很多功能，对于很多密码破解均有奇效。<code>JtR</code>破解的文件必须有特定的格式。要转换passwd和shadow文件，我们需要利用/usr/sbin/unshade可执行文件。这需要超级用户权限才能执行。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo /usr/sbin/unshadow /etc/passwd /etc/shadow &gt; ~/passwords.txt</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">/usr/sbin/john --wordlist=/usr/share/wordlists/rockyou.txt ~/passwords.txt</span><br></pre></td></tr></table></figure>
+<p>即可完成爆破。</p>
+<p>该工具的详细是使用功能可见<a href="https://xz.aliyun.com/t/3958" target="_blank" rel="noopener">https://xz.aliyun.com/t/3958</a></p>
+
+      
+    </div>
+
+  </div>
+
+  <div class="article-footer">
+    <div class="article-meta pull-left">
+
+    
+
+    
+    
+
+    <span class="post-tags">
+      <i class="icon-tags"></i>
+        <a href="/tags/linux/">linux</a>
+    </span>
+    
+
+    </div>
+
+    
+  </div>
+</article>
+
+
+    </main>
+
+    <footer class="site-footer">
+  <p class="site-info">
+    Proudly powered by <a href="https://hexo.io/" target="_blank">Hexo</a> and
+    Theme by <a href="https://github.com/CodeDaraW/Hacker" target="_blank">Hacker</a>
+    </br>
+    
+    &copy; 2019 fanson
+    
+  </p>
+</footer>
+    
+  </div>
+</div>
+<script type="text/javascript" src="/js/src/love.js"></script>
+</body>
+</html>
