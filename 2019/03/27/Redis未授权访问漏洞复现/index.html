@@ -1,0 +1,160 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Redis未授权访问漏洞复现及利用总结 | fanson&#39;s Blog</title>
+
+  
+  <meta name="author" content="fanson">
+  
+
+  
+  <meta name="description" content="斯人若彩虹，遇上方知有
+
+0x01 Redis介绍
+Redis是一个使用ANSI C编写的开源、支持网络、基于内存、可选持久性的键值(key-value)对存储 (store) 数据库。（基于 BSD 许可的，高级键值 (key-value) 缓存 (cache) 和存储 (store) 系统。）从">
+  
+
+  
+  
+  <meta name="keywords" content="渗透测试">
+  
+
+  <meta id="viewport" name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+  <meta property="og:title" content="Redis未授权访问漏洞复现及利用总结"/>
+
+  <meta property="og:site_name" content="fanson&#39;s Blog"/>
+
+  
+  <meta property="og:image" content="/favicon.ico"/>
+  
+
+  <link href="/favicon.ico" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="fanson&#39;s Blog" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+</head>
+
+
+<body>
+<div class="blog">
+  <div class="content">
+
+    <header>
+  <div class="site-branding">
+    <h1 class="site-title">
+      <a href="/">fanson&#39;s Blog</a>
+    </h1>
+    <p class="site-description"></p>
+  </div>
+  <nav class="site-navigation">
+    <ul>
+      
+        <li><a href="/">Home</a></li>
+      
+        <li><a href="/archives">Archives</a></li>
+      
+    </ul>
+  </nav>
+</header>
+
+    <main class="site-main posts-loop">
+    <article>
+
+  
+    
+    <h3 class="article-title"><span>Redis未授权访问漏洞复现及利用总结</span></h3>
+    
+  
+
+  <div class="article-top-meta">
+    <span class="posted-on">
+      <a href="/2019/03/27/Redis未授权访问漏洞复现/" rel="bookmark">
+        <time class="entry-date published" datetime="2019-03-27T15:09:29.000Z">
+          2019-03-27
+        </time>
+      </a>
+    </span>
+  </div>
+
+
+  
+
+  <div class="article-content">
+    <div class="entry">
+      
+        <blockquote>
+</blockquote>
+<blockquote>
+<p>斯人若彩虹，遇上方知有</p>
+</blockquote>
+<p><strong><em>0x01 Redis介绍</em></strong></p>
+<p><strong>Redis</strong>是一个使用ANSI C编写的开源、支持网络、基于内存、可选持久性的键值(key-value)对存储 (store) 数据库。（基于 BSD 许可的，高级键值 (key-value) 缓存 (cache) 和存储 (store) 系统。）从2015年6月开始，Redis的开发由<a href="https://zh.wikipedia.org/w/index.php?title=Redis_Labs&amp;action=edit&amp;redlink=1" target="_blank" rel="noopener">Redis Labs</a>赞助，而2013年5月至2015年6月期间，其开发由<a href="https://zh.wikipedia.org/wiki/Pivotal" target="_blank" rel="noopener">Pivotal</a>赞助。)在2013年5月之前，其开发由<a href="https://zh.wikipedia.org/wiki/VMware" target="_blank" rel="noopener">VMware</a>赞助。根据月度排行网站DB-Engines.com的数据显示，Redis是最流行的键值对存储数据库。由于 Redis 的键包括 string，hash，list，set，sorted set，bitmap 和 hyperloglog，所以常常被称为数据结构服务器。</p>
+<p><code>Redis</code>因配置不当可以未授权访问。攻击者无需认证访问到内部数据，可导致敏感信息泄露，也可以恶意执行<code>flushall</code>来清空所有数据。</p>
+<p><strong><em>0x02 环境搭建</em></strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">#靶机：CentOS7.0</span><br><span class="line">#CentOS安装redis</span><br><span class="line">wget http://download.redis.io/releases/redis-3.2.0.tar.gz</span><br><span class="line">tar xzf redis-3.2.0.tar.gz</span><br><span class="line">cd redis-3.2.0</span><br><span class="line">make</span><br></pre></td></tr></table></figure>
+<p><strong><em>0x03 漏洞复现</em></strong></p>
+<p><strong><em>0x04 填坑过程</em></strong></p>
+<p>安装Redis-3.2.0时报错：</p>
+<p>make[1]: Entering directory `/home/fanson/redis-3.2.0/src’<br>​    CC adlist.o<br>In file included from adlist.c:34:0:<br>zmalloc.h:50:31: fatal error: jemalloc/jemalloc.h: No such file or directory</p>
+<p>include &lt;jemalloc/jemalloc.h&gt;</p>
+<p>compilation terminated.<br>make[1]: <strong><em> [adlist.o] Error 1<br>make[1]: Leaving directory `/home/fanson/redis-3.2.0/src’<br>make: </em></strong> [all] Error 2</p>
+<p>解决方法</p>
+<p>Allocator  </p>
+<p>Selecting a non-default memory allocator when building Redis is done by setting  the <code>MALLOC</code> environment variable. Redis is compiled and linked against libc malloc by default, with the exception of jemalloc being the default on Linux  systems. This default was picked because jemalloc has proven to have fewer<br>fragmentation problems than libc malloc.  To force compiling against libc malloc, use:  </p>
+<pre><code>make MALLOC=libc  
+</code></pre><p>To compile against jemalloc on Mac OS X systems, use:  </p>
+<pre><code>make MALLOC=jemalloc
+</code></pre><p><strong><em>0x05 参考文献</em></strong></p>
+<p><a href="https://xz.aliyun.com/t/256" target="_blank" rel="noopener">https://xz.aliyun.com/t/256</a></p>
+<p><a href="https://www.anquanke.com/post/id/170360" target="_blank" rel="noopener">https://www.anquanke.com/post/id/170360</a></p>
+<p><a href="https://uknowsec.cn/posts/notes/Redis%E5%9C%A8Windows%E7%8E%AF%E5%A2%83%E4%B8%8BGetshell.html" target="_blank" rel="noopener">https://uknowsec.cn/posts/notes/Redis%E5%9C%A8Windows%E7%8E%AF%E5%A2%83%E4%B8%8BGetshell.html</a></p>
+<p><a href="http://redisinaction.com/preview/chapter1.html" target="_blank" rel="noopener">http://redisinaction.com/preview/chapter1.html</a></p>
+
+      
+    </div>
+
+  </div>
+
+  <div class="article-footer">
+    <div class="article-meta pull-left">
+
+    
+
+    
+    
+
+    <span class="post-tags">
+      <i class="icon-tags"></i>
+        <a href="/tags/渗透测试/">渗透测试</a>
+    </span>
+    
+
+    </div>
+
+    
+  </div>
+</article>
+
+
+    </main>
+
+    <footer class="site-footer">
+  <p class="site-info">
+    Proudly powered by <a href="https://hexo.io/" target="_blank">Hexo</a> and
+    Theme by <a href="https://github.com/CodeDaraW/Hacker" target="_blank">Hacker</a>
+    </br>
+    
+    &copy; 2019 fanson
+    
+  </p>
+</footer>
+    
+  </div>
+</div>
+<script type="text/javascript" src="/js/src/love.js"></script>
+</body>
+</html>

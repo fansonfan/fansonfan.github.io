@@ -59,6 +59,77 @@
 
   
     
+    <h3 class="article-title"><a href="/2018/10/07/Use-After-Free漏洞浅析/"><span>Use After Free漏洞浅析</span></a></h3>
+    
+  
+
+  <div class="article-top-meta">
+    <span class="posted-on">
+      <a href="/2018/10/07/Use-After-Free漏洞浅析/" rel="bookmark">
+        <time class="entry-date published" datetime="2018-10-07T04:20:53.000Z">
+          2018-10-07
+        </time>
+      </a>
+    </span>
+  </div>
+
+
+  
+
+  <div class="article-content">
+    <div class="entry">
+      
+        <h3 id="一：前言"><a href="#一：前言" class="headerlink" title="一：前言"></a>一：前言</h3><p>最近一直在研究浏览器相关的的漏洞，其中很多漏洞都是UAF，很多相关CTF的题也是关于该漏洞的，所以趁着国庆假期间，来捋一捋该方面的东西，谈谈自己对Use After Free漏洞的理解和漏洞原理的解析。</p>
+<h3 id="二：UAF介绍"><a href="#二：UAF介绍" class="headerlink" title="二：UAF介绍"></a>二：UAF介绍</h3><p>UAF (Use After Free)漏洞是一种内存破坏漏洞,通常存在于浏览器中。该漏洞也称为”释放即<code>free()</code>后重引用”漏洞，触发漏洞在于”重引用”这一步，而重引用之前要通过”占坑”方式来修改要”重引用”的指针对应内存中的数据，然后”重引用”到已经变化了的构造好的数据，导致执行任意代码。</p>
+<blockquote>
+<p>即使浏览器的新版本加入了一系列控件与机制，使得利用这些漏洞变得更加困难。但是它们似乎仍然存在。</p>
+</blockquote>
+<h3 id="三：UAF漏洞原理"><a href="#三：UAF漏洞原理" class="headerlink" title="三：UAF漏洞原理"></a>三：UAF漏洞原理</h3><p>首先我们先从hello word 开始：）</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span><span class="meta-string">&lt;stdio.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">mian</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">char</span> *p0;</span><br><span class="line">    p0=(<span class="keyword">char</span> *)<span class="built_in">malloc</span>(<span class="keyword">sizeof</span>(<span class="keyword">char</span>)*<span class="number">10</span>);   <span class="comment">//指针p0申请内存；</span></span><br><span class="line">    <span class="built_in">memcpy</span>(p0,<span class="string">"hello"</span>,<span class="number">10</span>);</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"p0 Addr:%x,%s\n"</span>,p0,p0);      <span class="comment">//打印其地址与值；</span></span><br><span class="line">    <span class="built_in">free</span>(p0);                             <span class="comment">//释放p0；</span></span><br><span class="line">    <span class="keyword">char</span> *p1;</span><br><span class="line">    p1==(<span class="keyword">char</span> *)<span class="built_in">malloc</span>(<span class="keyword">sizeof</span>(<span class="keyword">char</span>)*<span class="number">10</span>);</span><br><span class="line">    <span class="built_in">memcpy</span>(p1,<span class="string">"word"</span>,<span class="number">10</span>);</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"p1 Addr:%x,%s\n"</span>,p1,p0);</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>直接编译并运行如下图：</p>
+<p><img src="/2018/10/07/Use-After-Free漏洞浅析/a.out.PNG" alt=""></p>
+<p>通过该段代码我们可以知道<code>UAF</code>的利用过程：</p>
+<ol>
+<li>指针p0申请了一段空间，最后并将其释放，但在释放之后并不将指针置为空，故而该指针仍然可以使用p0指针；</li>
+<li>申请空间p1，由于<code>malloc</code>分配的过程使得p1指向的空间为刚刚释放的p0指针的空间，构造恶意的数据将这段内存空间布局好，即覆盖了p0中的数据；</li>
+<li>由代码可以看到p0与p1的地址是相同的，p0与p1指向的内存为同一地址，所以此时的数据即是我们可控制的；</li>
+</ol>
+<h3 id="四：利用场景"><a href="#四：利用场景" class="headerlink" title="四：利用场景"></a>四：利用场景</h3><p>后续。。。</p>
+<h3 id="五：参考"><a href="#五：参考" class="headerlink" title="五：参考"></a>五：参考</h3><p>【1】<a href="https://www.cnblogs.com/alert123/p/4918041.html" target="_blank" rel="noopener">https://www.cnblogs.com/alert123/p/4918041.html</a></p>
+<p>【2】<a href="https://www.anquanke.com/post/id/84359" target="_blank" rel="noopener">https://www.anquanke.com/post/id/84359</a></p>
+<p>【3】<a href="https://www.anquanke.com/post/id/85281" target="_blank" rel="noopener">https://www.anquanke.com/post/id/85281</a></p>
+
+      
+    </div>
+
+  </div>
+
+  <div class="article-footer">
+    <div class="article-meta pull-left">
+
+    
+
+    
+    
+
+    <span class="post-tags">
+      <i class="icon-tags"></i>
+        <a href="/tags/逆向/">逆向</a>
+    </span>
+    
+
+    </div>
+
+    
+  </div>
+</article>
+
+
+
+  <article>
+
+  
+    
     <h3 class="article-title"><a href="/2018/10/07/AFL漫谈/"><span>AFL漫谈</span></a></h3>
     
   

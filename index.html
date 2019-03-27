@@ -59,6 +59,85 @@
 
   
     
+    <h3 class="article-title"><a href="/2019/03/27/Redis未授权访问漏洞复现/"><span>Redis未授权访问漏洞复现及利用总结</span></a></h3>
+    
+  
+
+  <div class="article-top-meta">
+    <span class="posted-on">
+      <a href="/2019/03/27/Redis未授权访问漏洞复现/" rel="bookmark">
+        <time class="entry-date published" datetime="2019-03-27T15:09:29.000Z">
+          2019-03-27
+        </time>
+      </a>
+    </span>
+  </div>
+
+
+  
+
+  <div class="article-content">
+    <div class="entry">
+      
+        <blockquote>
+</blockquote>
+<blockquote>
+<p>斯人若彩虹，遇上方知有</p>
+</blockquote>
+<p><strong><em>0x01 Redis介绍</em></strong></p>
+<p><strong>Redis</strong>是一个使用ANSI C编写的开源、支持网络、基于内存、可选持久性的键值(key-value)对存储 (store) 数据库。（基于 BSD 许可的，高级键值 (key-value) 缓存 (cache) 和存储 (store) 系统。）从2015年6月开始，Redis的开发由<a href="https://zh.wikipedia.org/w/index.php?title=Redis_Labs&amp;action=edit&amp;redlink=1" target="_blank" rel="noopener">Redis Labs</a>赞助，而2013年5月至2015年6月期间，其开发由<a href="https://zh.wikipedia.org/wiki/Pivotal" target="_blank" rel="noopener">Pivotal</a>赞助。)在2013年5月之前，其开发由<a href="https://zh.wikipedia.org/wiki/VMware" target="_blank" rel="noopener">VMware</a>赞助。根据月度排行网站DB-Engines.com的数据显示，Redis是最流行的键值对存储数据库。由于 Redis 的键包括 string，hash，list，set，sorted set，bitmap 和 hyperloglog，所以常常被称为数据结构服务器。</p>
+<p><code>Redis</code>因配置不当可以未授权访问。攻击者无需认证访问到内部数据，可导致敏感信息泄露，也可以恶意执行<code>flushall</code>来清空所有数据。</p>
+<p><strong><em>0x02 环境搭建</em></strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">#靶机：CentOS7.0</span><br><span class="line">#CentOS安装redis</span><br><span class="line">wget http://download.redis.io/releases/redis-3.2.0.tar.gz</span><br><span class="line">tar xzf redis-3.2.0.tar.gz</span><br><span class="line">cd redis-3.2.0</span><br><span class="line">make</span><br></pre></td></tr></table></figure>
+<p><strong><em>0x03 漏洞复现</em></strong></p>
+<p><strong><em>0x04 填坑过程</em></strong></p>
+<p>安装Redis-3.2.0时报错：</p>
+<p>make[1]: Entering directory `/home/fanson/redis-3.2.0/src’<br>​    CC adlist.o<br>In file included from adlist.c:34:0:<br>zmalloc.h:50:31: fatal error: jemalloc/jemalloc.h: No such file or directory</p>
+<p>include &lt;jemalloc/jemalloc.h&gt;</p>
+<p>compilation terminated.<br>make[1]: <strong><em> [adlist.o] Error 1<br>make[1]: Leaving directory `/home/fanson/redis-3.2.0/src’<br>make: </em></strong> [all] Error 2</p>
+<p>解决方法</p>
+<p>Allocator  </p>
+<p>Selecting a non-default memory allocator when building Redis is done by setting  the <code>MALLOC</code> environment variable. Redis is compiled and linked against libc malloc by default, with the exception of jemalloc being the default on Linux  systems. This default was picked because jemalloc has proven to have fewer<br>fragmentation problems than libc malloc.  To force compiling against libc malloc, use:  </p>
+<pre><code>make MALLOC=libc  
+</code></pre><p>To compile against jemalloc on Mac OS X systems, use:  </p>
+<pre><code>make MALLOC=jemalloc
+</code></pre><p><strong><em>0x05 参考文献</em></strong></p>
+<p><a href="https://xz.aliyun.com/t/256" target="_blank" rel="noopener">https://xz.aliyun.com/t/256</a></p>
+<p><a href="https://www.anquanke.com/post/id/170360" target="_blank" rel="noopener">https://www.anquanke.com/post/id/170360</a></p>
+<p><a href="https://uknowsec.cn/posts/notes/Redis%E5%9C%A8Windows%E7%8E%AF%E5%A2%83%E4%B8%8BGetshell.html" target="_blank" rel="noopener">https://uknowsec.cn/posts/notes/Redis%E5%9C%A8Windows%E7%8E%AF%E5%A2%83%E4%B8%8BGetshell.html</a></p>
+<p><a href="http://redisinaction.com/preview/chapter1.html" target="_blank" rel="noopener">http://redisinaction.com/preview/chapter1.html</a></p>
+
+      
+    </div>
+
+  </div>
+
+  <div class="article-footer">
+    <div class="article-meta pull-left">
+
+    
+
+    
+    
+
+    <span class="post-tags">
+      <i class="icon-tags"></i>
+        <a href="/tags/渗透测试/">渗透测试</a>
+    </span>
+    
+
+    </div>
+
+    
+  </div>
+</article>
+
+
+
+  <article>
+
+  
+    
     <h3 class="article-title"><a href="/2019/03/26/linux下的-etc-password-etc-shadow/"><span>linux下的/etc/passwd&amp;&amp;/etc/shadow</span></a></h3>
     
   
@@ -894,77 +973,6 @@
 <p><code>Finally!</code></p>
 <p><img src="/2018/10/21/栈溢出浅析/do.PNG" alt=""></p>
 <p>### </p>
-
-      
-    </div>
-
-  </div>
-
-  <div class="article-footer">
-    <div class="article-meta pull-left">
-
-    
-
-    
-    
-
-    <span class="post-tags">
-      <i class="icon-tags"></i>
-        <a href="/tags/逆向/">逆向</a>
-    </span>
-    
-
-    </div>
-
-    
-  </div>
-</article>
-
-
-
-  <article>
-
-  
-    
-    <h3 class="article-title"><a href="/2018/10/07/Use-After-Free漏洞浅析/"><span>Use After Free漏洞浅析</span></a></h3>
-    
-  
-
-  <div class="article-top-meta">
-    <span class="posted-on">
-      <a href="/2018/10/07/Use-After-Free漏洞浅析/" rel="bookmark">
-        <time class="entry-date published" datetime="2018-10-07T04:20:53.000Z">
-          2018-10-07
-        </time>
-      </a>
-    </span>
-  </div>
-
-
-  
-
-  <div class="article-content">
-    <div class="entry">
-      
-        <h3 id="一：前言"><a href="#一：前言" class="headerlink" title="一：前言"></a>一：前言</h3><p>最近一直在研究浏览器相关的的漏洞，其中很多漏洞都是UAF，很多相关CTF的题也是关于该漏洞的，所以趁着国庆假期间，来捋一捋该方面的东西，谈谈自己对Use After Free漏洞的理解和漏洞原理的解析。</p>
-<h3 id="二：UAF介绍"><a href="#二：UAF介绍" class="headerlink" title="二：UAF介绍"></a>二：UAF介绍</h3><p>UAF (Use After Free)漏洞是一种内存破坏漏洞,通常存在于浏览器中。该漏洞也称为”释放即<code>free()</code>后重引用”漏洞，触发漏洞在于”重引用”这一步，而重引用之前要通过”占坑”方式来修改要”重引用”的指针对应内存中的数据，然后”重引用”到已经变化了的构造好的数据，导致执行任意代码。</p>
-<blockquote>
-<p>即使浏览器的新版本加入了一系列控件与机制，使得利用这些漏洞变得更加困难。但是它们似乎仍然存在。</p>
-</blockquote>
-<h3 id="三：UAF漏洞原理"><a href="#三：UAF漏洞原理" class="headerlink" title="三：UAF漏洞原理"></a>三：UAF漏洞原理</h3><p>首先我们先从hello word 开始：）</p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span><span class="meta-string">&lt;stdio.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">mian</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">char</span> *p0;</span><br><span class="line">    p0=(<span class="keyword">char</span> *)<span class="built_in">malloc</span>(<span class="keyword">sizeof</span>(<span class="keyword">char</span>)*<span class="number">10</span>);   <span class="comment">//指针p0申请内存；</span></span><br><span class="line">    <span class="built_in">memcpy</span>(p0,<span class="string">"hello"</span>,<span class="number">10</span>);</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"p0 Addr:%x,%s\n"</span>,p0,p0);      <span class="comment">//打印其地址与值；</span></span><br><span class="line">    <span class="built_in">free</span>(p0);                             <span class="comment">//释放p0；</span></span><br><span class="line">    <span class="keyword">char</span> *p1;</span><br><span class="line">    p1==(<span class="keyword">char</span> *)<span class="built_in">malloc</span>(<span class="keyword">sizeof</span>(<span class="keyword">char</span>)*<span class="number">10</span>);</span><br><span class="line">    <span class="built_in">memcpy</span>(p1,<span class="string">"word"</span>,<span class="number">10</span>);</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"p1 Addr:%x,%s\n"</span>,p1,p0);</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>直接编译并运行如下图：</p>
-<p><img src="/2018/10/07/Use-After-Free漏洞浅析/a.out.PNG" alt=""></p>
-<p>通过该段代码我们可以知道<code>UAF</code>的利用过程：</p>
-<ol>
-<li>指针p0申请了一段空间，最后并将其释放，但在释放之后并不将指针置为空，故而该指针仍然可以使用p0指针；</li>
-<li>申请空间p1，由于<code>malloc</code>分配的过程使得p1指向的空间为刚刚释放的p0指针的空间，构造恶意的数据将这段内存空间布局好，即覆盖了p0中的数据；</li>
-<li>由代码可以看到p0与p1的地址是相同的，p0与p1指向的内存为同一地址，所以此时的数据即是我们可控制的；</li>
-</ol>
-<h3 id="四：利用场景"><a href="#四：利用场景" class="headerlink" title="四：利用场景"></a>四：利用场景</h3><p>后续。。。</p>
-<h3 id="五：参考"><a href="#五：参考" class="headerlink" title="五：参考"></a>五：参考</h3><p>【1】<a href="https://www.cnblogs.com/alert123/p/4918041.html" target="_blank" rel="noopener">https://www.cnblogs.com/alert123/p/4918041.html</a></p>
-<p>【2】<a href="https://www.anquanke.com/post/id/84359" target="_blank" rel="noopener">https://www.anquanke.com/post/id/84359</a></p>
-<p>【3】<a href="https://www.anquanke.com/post/id/85281" target="_blank" rel="noopener">https://www.anquanke.com/post/id/85281</a></p>
 
       
     </div>
