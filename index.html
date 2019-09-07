@@ -83,7 +83,7 @@
 <p>​        最近拿到一个iot设备的root shell 后，并且该文件系统是只可读的，但是想把设备的固件通过shell提取出来，通过adb pull仅仅只能提取出部分的文件系统，而不是整个完整的文件系统，那么在这种情况下，我们该如何提取完整的固件系统，下面我记录下我们提取的过程：</p>
 <p><strong>0x00 嵌入式linux启动过程</strong></p>
 <p>​        首先，我们先来看一下相关的知识，我们就拿由 BootLoader、kernel、initrd、rootfs 组成的 Linux Image 来描述，它们共同存在于一个可以启动的存储设备中（本文以 USB 为例）。组成架构如下：</p>
-<p><img src="/2019/09/07/构建Linux可读写文件系统/D:/my%20first%20blog/blog/Hexo/source/_posts/%E6%9E%84%E5%BB%BALinux%E5%8F%AF%E8%AF%BB%E5%86%99%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/boot.png" alt=""></p>
+<p><img src="/2019/09/07/构建Linux可读写文件系统/boot.png" alt=""></p>
 <p>​                                    图一：可启动Linux 镜像文件结构</p>
 <p>各模块的作用：</p>
 <ol>
