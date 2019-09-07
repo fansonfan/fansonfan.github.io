@@ -59,6 +59,124 @@
 
   
     
+    <h3 class="article-title"><a href="/2019/09/07/构建Linux可读写文件系统/"><span>构建Linux可读写文件系统</span></a></h3>
+    
+  
+
+  <div class="article-top-meta">
+    <span class="posted-on">
+      <a href="/2019/09/07/构建Linux可读写文件系统/" rel="bookmark">
+        <time class="entry-date published" datetime="2019-09-07T02:30:30.000Z">
+          2019-09-07
+        </time>
+      </a>
+    </span>
+  </div>
+
+
+  
+
+  <div class="article-content">
+    <div class="entry">
+      
+        <p><strong>构建 Linux 可读写文件系统</strong></p>
+<p>​        最近拿到一个iot设备的root shell 后，并且该文件系统是只可读的，但是想把设备的固件通过shell提取出来，通过adb pull仅仅只能提取出部分的文件系统，而不是整个完整的文件系统，那么在这种情况下，我们该如何提取完整的固件系统，下面我记录下我们提取的过程：</p>
+<p><strong>0x00 嵌入式linux启动过程</strong></p>
+<p>​        首先，我们先来看一下相关的知识，我们就拿由 BootLoader、kernel、initrd、rootfs 组成的 Linux Image 来描述，它们共同存在于一个可以启动的存储设备中（本文以 USB 为例）。组成架构如下：</p>
+<p><img src="/2019/09/07/构建Linux可读写文件系统/D:/my%20first%20blog/blog/Hexo/source/_posts/%E6%9E%84%E5%BB%BALinux%E5%8F%AF%E8%AF%BB%E5%86%99%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/boot.png" alt=""></p>
+<p>​                                    图一：可启动Linux 镜像文件结构</p>
+<p>各模块的作用：</p>
+<ol>
+<li><strong>Bootloader</strong>：由 BIOS 加载，用于将后续的 Kernel 和 initrd 的装载到内存中；</li>
+<li><strong>kernel</strong>：为 initrd 运行提供基础的运行环境；</li>
+<li><strong>initrd</strong>：检测并加载各种驱动程序；</li>
+<li><strong>rootfs</strong>：根文件系统，用户的各种操作都是基于这个被最后加载的文件系统；</li>
+</ol>
+<p>在启动过程中，其各个模块的调用顺序是 <strong>Boot Loader-&gt;kernel-&gt;initrd-&gt;rootfs</strong>。</p>
+<p>​        当机器上电时首先 BIOS 会启动，然后装载 USB 设备中的 Boot Loader、kernel,、nitrd 到内存中，由于这些文件大小总和小于 10M，所以我们直接拷贝到内存中再执行不会有问题。</p>
+<p>最后要加载的 rootfs 是用户最终进行读写操作的文件系统。</p>
+<ul>
+<li>在非嵌入式系统中，这部分文件通常储存在可直接读写的硬盘上，因此直接挂载到根目录后（例如：mount /dev/sda1 /mnt）就可以进行读写操作。</li>
+<li>在嵌入式系统中，它是一个压缩的文件系统，大小通常是好几百兆，解压后的大小都超过 1G，如果直接 mount 到系统目录，那么系统目录是只读的，不可进行写入操作。而如果把它加压到内存中可以实现读写的操作，但是这么大的文件直接解压到内存中对于嵌入式设备来说是不可接受的。因此我们需要找到一种不拷贝 rootfs 到内存中，同时又可以对最终的根文件系统进行读写的方法。</li>
+</ul>
+<p><strong>0x01 SquashFS只读文件介绍</strong></p>
+<p>​        SquashFS 是一个只读的文件系统，它可以将整个文件系统压缩在一起，存放在某个设备，某个分区或者普通的文件中。<strong>如果您将其压缩到一个设备中，那么您可以将其直接 mount 起来使用，而如果它仅仅是个文件的话，您可以将其当为一个 loopback 设备使用。</strong></p>
+<p>​        从上面我重点标记的这句话就可以知道，对这种固件的提取能不能采用这种办法呢？可以不可以呢，试试不就好了！</p>
+<p><strong>0x02 拷贝完整的固件文件并压缩为完整文件系统</strong></p>
+<p>​        首先我们按步骤来创建出该固件的完整的备份：</p>
+<ol>
+<li><p>步骤 1-创建空的根文件系统，文件系统的大小为 65536 × 24000/1024/1024=1.5G。接下来我们会在这个空的根文件系统中存放文件。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">dd if=/dev/zero of=rootfs bs=65536 count=24000 </span><br><span class="line">mke2fs -F rootfs</span><br></pre></td></tr></table></figure>
+<p>[^dd]: dd: 读取源文件的内容并创建一个新文件，if 指定源文件内容，of 指定新文件名字，bs 和 count 指定新文件的大小  mke2fs: 将新创建的 rootfs 格式化为 Linux 可识别的文件系统</p>
+</li>
+<li><p>步骤 2-挂载空的根文件系统，将 1.5G 的文件系统挂载在 mnt 目录下，然后通过 mnt 目录将内容写入根文件系统</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">挂载空的根文件系统</span><br><span class="line">mkdir mnt </span><br><span class="line">mount rootfs mnt -o loop</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>步骤 3-拷贝根文件目录的内容到文件系统</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">拷贝根文件目录统</span><br><span class="line">cp -rp yourRootDir mnt </span><br><span class="line">umount mnt</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>拷贝完后根文件系统的内容后，完成根文件系统的创建，这时的 rootfs 没有被压缩，接下来我们用工具将其压缩成 Squash 格式的文件系统</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">mkdir squashfs-dir </span><br><span class="line">mv rootfs squshfs-dir </span><br><span class="line">mksquashfs-4.1 squashfs-dir squashRootfs</span><br></pre></td></tr></table></figure>
+<p>[^mksquashfs-4.1]: mksquashfs-4.1 是在安装 Squash 工具的过程中生成的命令，用于将一个文件夹下的内容打包并压缩成一个文件系统。其后第一个参数为文件夹，第二个参数为生成的文件系统。</p>
+</li>
+</ol>
+<p><strong>0x03 制作为ext4文件系统</strong></p>
+<p>​        上面我们把提取出来的文件制作为Squash 格式的文件系统，我们还可以制作为我们想要制作的格式的文件系统，例如，我们可以制作为ext4文件系统，同理按照我们下面的步骤；</p>
+<ol>
+<li><p>步骤1-新建目录rootfs_tmp文件，用于临时挂载文件系统</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mkdir -p rootfs_tmp</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>步骤2-制作一个128M(128x1024=131072)的ext4空白文件：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">dd if=/dev/zero of=rootfs.ext4 bs=1024 count=131072</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>再将新建的rootfs.ext4文件格式化为ext4格式：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo mkfs.ext4 rootfs.ext4</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>将rootfs.ext4文件挂载到前面新建的临时目录rootfs_tmp，注意这里要使用mount –o loop的属性，表示要把rootfs.ext4当作硬盘分区挂载到rootfs_tmp：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo mount -o loop rootfs.ext4 ./rootfs_tmp</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>这时，我们就可以给rootfs.ext4填充内容了。执行如下指令拷贝文件系统内容：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">cd ./rootfs_tmp</span><br><span class="line">cp -avrf ../busybox_rootfs/* ./</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>拷贝完后，卸载挂载的rootfs.ext4文件，即完成了文件系统的制作：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo umount ./rootfs_tmp</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<p>这样就完成ext4格式的rooffs文件系统的制作。</p>
+<p>通过这种方式我们就可以提取出整个完整的固件！感觉一般没什么用，觉得好玩就记录下来。</p>
+<p><strong>0x04 参考链接</strong></p>
+
+      
+    </div>
+
+  </div>
+
+  <div class="article-footer">
+    <div class="article-meta pull-left">
+
+    
+
+    
+    
+
+    <span class="post-tags">
+      <i class="icon-tags"></i>
+        <a href="/tags/linux/">linux</a>
+    </span>
+    
+
+    </div>
+
+    
+  </div>
+</article>
+
+
+
+  <article>
+
+  
+    
     <h3 class="article-title"><a href="/2019/04/20/rsync-未授权访问漏洞复现/"><span>rsync 未授权访问漏洞复现</span></a></h3>
     
   
@@ -845,90 +963,6 @@
     <span class="post-tags">
       <i class="icon-tags"></i>
         <a href="/tags/Tools/">Tools</a>
-    </span>
-    
-
-    </div>
-
-    
-  </div>
-</article>
-
-
-
-  <article>
-
-  
-    
-    <h3 class="article-title"><a href="/2018/11/01/路由器漏洞挖掘入门/"><span>路由器漏洞挖掘入门</span></a></h3>
-    
-  
-
-  <div class="article-top-meta">
-    <span class="posted-on">
-      <a href="/2018/11/01/路由器漏洞挖掘入门/" rel="bookmark">
-        <time class="entry-date published" datetime="2018-11-01T15:19:08.000Z">
-          2018-11-01
-        </time>
-      </a>
-    </span>
-  </div>
-
-
-  
-
-  <div class="article-content">
-    <div class="entry">
-      
-        <p>周末在家闲着，也趁着这个时间来入门学习下路由器漏洞挖掘！网上查阅的D-Link系列的漏洞也不少，那就从D-Link路由器漏洞开始学习，顺便刚好也好跟着<a href="https://paper.seebug.org/429/" target="_blank" rel="noopener">创宇paper</a>学习，就当是学习笔记了！</p>
-<h4 id="一：准备工作"><a href="#一：准备工作" class="headerlink" title="一：准备工作"></a>一：准备工作</h4><ul>
-<li><code>binwalk</code>:用来解开固件包</li>
-<li>路由器的固件：<a href="ftp://ftp2.dlink.com/PRODUCTS/" target="_blank" rel="noopener">ftp://ftp2.dlink.com/PRODUCTS/</a></li>
-</ul>
-<p>完成<code>binwalk</code>的安装后，”<code>binwalk -Me</code> 固件包名称”来解相对应的固件。</p>
-<h4 id="二：漏洞挖掘"><a href="#二：漏洞挖掘" class="headerlink" title="二：漏洞挖掘"></a>二：漏洞挖掘</h4><p>D-Link DIR-300 信息泄露漏洞</p>
-<p><a href="https://www.shodan.io/search?query=DIR-300" target="_blank" rel="noopener">shodan :DIR-300</a></p>
-<p>我们先下载<code>D-Link DIR-300</code>的固件并且解固件</p>
-<p><img src="/2018/11/01/路由器漏洞挖掘入门/1.PNG" alt=""></p>
-<p>在解固件之后，进入 <code>suashfs-root/www</code> 文件夹，漏洞出现在<code>/model/__show_info.php</code>文件。</p>
-<p><img src="/2018/11/01/路由器漏洞挖掘入门/2.PNG" alt=""></p>
-<p>这里看到已经禁止了<code>$REQUIRE_FILE</code>的参数为<code>var/etc/httpasswd</code>和<code>var/etc/hnapasswd</code>。这样的话看起来我们是无法获取账号密码的。那如果我们从根路径开始配置<code>httpasswd</code>的路径，那么是不是就可以绕过这个过滤了呢！</p>
-<p>payload：（<a href="https://paper.seebug.org/429/" target="_blank" rel="noopener">创宇</a>）</p>
-<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">localhost/model/__show_info.php?REQUIRE_FILE=/<span class="keyword">var</span>/etc/httpasswd</span><br></pre></td></tr></table></figure>
-<p>这里设置<code>REQUIRE_FILE=/var/etc/httpasswd</code> 成功绕过上面的 <code>if</code>判断，进行任意文件读取。</p>
-<p>D-Link DIR-645信息泄露漏洞</p>
-<p><a href="https://www.shodan.io/search?query=DIR-645" target="_blank" rel="noopener">shodan:DIR-645</a></p>
-<p>同样该漏洞出现在 <code>suashfs-root/htdocs</code> 文件夹<code>getcfg.php</code> 文件由于过滤不严格导致信息泄露漏洞</p>
-<p><img src="/2018/11/01/路由器漏洞挖掘入门/5.PNG" alt=""></p>
-<p>该代码中 <code>$GETCFG_SVC</code> 没有任何过滤直接获取了 POST 传递过来的<code>SERVICES</code>的值。如果<code>$GETCFG_SVC</code>不为空，则进行文件读取。这里我们就可以读取存储此设备信息的<code>DEVICE.ACCOUNT.xml.php</code>文件。</p>
-<p>payload：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">http://localhost/getcfg.php</span><br><span class="line">post:SERVICES=DEVICE.ACCOUNT</span><br></pre></td></tr></table></figure>
-<p>说了这么久了，实战走一波吧！</p>
-<p>进入D-Link DIR-645的web登录页面，则显示需要用户与密码则可登录，那么接下来我们来获取他们</p>
-<p><img src="/2018/11/01/路由器漏洞挖掘入门/6.PNG" alt=""></p>
-<p>利用payload打一波</p>
-<p><img src="/2018/11/01/路由器漏洞挖掘入门/3.PNG" alt=""></p>
-<p>果然，我们可以清楚地看到账号密码，继续登录验证，登录成功</p>
-<p><img src="/2018/11/01/路由器漏洞挖掘入门/4.PNG" alt=""></p>
-<h4 id="三：参考"><a href="#三：参考" class="headerlink" title="三：参考"></a>三：参考</h4><p>【1】<a href="http://www.devttys0.com/wp-content/uploads/2010/12/dlink_php_vulnerability.pdf" target="_blank" rel="noopener">.http://www.devttys0.com/wp-content/uploads/2010/12/dlink_php_vulnerability.pdf</a></p>
-<p>【2】<a href="https://paper.seebug.org/429/" target="_blank" rel="noopener">https://paper.seebug.org/429/</a></p>
-
-      
-    </div>
-
-  </div>
-
-  <div class="article-footer">
-    <div class="article-meta pull-left">
-
-    
-
-    
-    
-
-    <span class="post-tags">
-      <i class="icon-tags"></i>
-        <a href="/tags/漏洞挖掘/">漏洞挖掘</a>
     </span>
     
 

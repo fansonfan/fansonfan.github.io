@@ -1,0 +1,197 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>构建Linux可读写文件系统 | fanson&#39;s Blog</title>
+
+  
+  <meta name="author" content="fanson">
+  
+
+  
+  <meta name="description" content="构建 Linux 可读写文件系统
+​        最近拿到一个iot设备的root shell 后，并且该文件系统是只可读的，但是想把设备的固件通过shell提取出来，通过adb pull仅仅只能提取出部分的文件系统，而不是整个完整的文件系统，那么在这种情况下，我们该如何提取完整的固件系统，下面我">
+  
+
+  
+  
+  <meta name="keywords" content="linux">
+  
+
+  <meta id="viewport" name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+  <meta property="og:title" content="构建Linux可读写文件系统"/>
+
+  <meta property="og:site_name" content="fanson&#39;s Blog"/>
+
+  
+  <meta property="og:image" content="/favicon.ico"/>
+  
+
+  <link href="/favicon.ico" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="fanson&#39;s Blog" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+</head>
+
+
+<body>
+<div class="blog">
+  <div class="content">
+
+    <header>
+  <div class="site-branding">
+    <h1 class="site-title">
+      <a href="/">fanson&#39;s Blog</a>
+    </h1>
+    <p class="site-description"></p>
+  </div>
+  <nav class="site-navigation">
+    <ul>
+      
+        <li><a href="/">Home</a></li>
+      
+        <li><a href="/archives">Archives</a></li>
+      
+    </ul>
+  </nav>
+</header>
+
+    <main class="site-main posts-loop">
+    <article>
+
+  
+    
+    <h3 class="article-title"><span>构建Linux可读写文件系统</span></h3>
+    
+  
+
+  <div class="article-top-meta">
+    <span class="posted-on">
+      <a href="/2019/09/07/构建Linux可读写文件系统/" rel="bookmark">
+        <time class="entry-date published" datetime="2019-09-07T02:30:30.000Z">
+          2019-09-07
+        </time>
+      </a>
+    </span>
+  </div>
+
+
+  
+
+  <div class="article-content">
+    <div class="entry">
+      
+        <p><strong>构建 Linux 可读写文件系统</strong></p>
+<p>​        最近拿到一个iot设备的root shell 后，并且该文件系统是只可读的，但是想把设备的固件通过shell提取出来，通过adb pull仅仅只能提取出部分的文件系统，而不是整个完整的文件系统，那么在这种情况下，我们该如何提取完整的固件系统，下面我记录下我们提取的过程：</p>
+<p><strong>0x00 嵌入式linux启动过程</strong></p>
+<p>​        首先，我们先来看一下相关的知识，我们就拿由 BootLoader、kernel、initrd、rootfs 组成的 Linux Image 来描述，它们共同存在于一个可以启动的存储设备中（本文以 USB 为例）。组成架构如下：</p>
+<p><img src="/2019/09/07/构建Linux可读写文件系统/D:/my%20first%20blog/blog/Hexo/source/_posts/%E6%9E%84%E5%BB%BALinux%E5%8F%AF%E8%AF%BB%E5%86%99%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/boot.png" alt=""></p>
+<p>​                                    图一：可启动Linux 镜像文件结构</p>
+<p>各模块的作用：</p>
+<ol>
+<li><strong>Bootloader</strong>：由 BIOS 加载，用于将后续的 Kernel 和 initrd 的装载到内存中；</li>
+<li><strong>kernel</strong>：为 initrd 运行提供基础的运行环境；</li>
+<li><strong>initrd</strong>：检测并加载各种驱动程序；</li>
+<li><strong>rootfs</strong>：根文件系统，用户的各种操作都是基于这个被最后加载的文件系统；</li>
+</ol>
+<p>在启动过程中，其各个模块的调用顺序是 <strong>Boot Loader-&gt;kernel-&gt;initrd-&gt;rootfs</strong>。</p>
+<p>​        当机器上电时首先 BIOS 会启动，然后装载 USB 设备中的 Boot Loader、kernel,、nitrd 到内存中，由于这些文件大小总和小于 10M，所以我们直接拷贝到内存中再执行不会有问题。</p>
+<p>最后要加载的 rootfs 是用户最终进行读写操作的文件系统。</p>
+<ul>
+<li>在非嵌入式系统中，这部分文件通常储存在可直接读写的硬盘上，因此直接挂载到根目录后（例如：mount /dev/sda1 /mnt）就可以进行读写操作。</li>
+<li>在嵌入式系统中，它是一个压缩的文件系统，大小通常是好几百兆，解压后的大小都超过 1G，如果直接 mount 到系统目录，那么系统目录是只读的，不可进行写入操作。而如果把它加压到内存中可以实现读写的操作，但是这么大的文件直接解压到内存中对于嵌入式设备来说是不可接受的。因此我们需要找到一种不拷贝 rootfs 到内存中，同时又可以对最终的根文件系统进行读写的方法。</li>
+</ul>
+<p><strong>0x01 SquashFS只读文件介绍</strong></p>
+<p>​        SquashFS 是一个只读的文件系统，它可以将整个文件系统压缩在一起，存放在某个设备，某个分区或者普通的文件中。<strong>如果您将其压缩到一个设备中，那么您可以将其直接 mount 起来使用，而如果它仅仅是个文件的话，您可以将其当为一个 loopback 设备使用。</strong></p>
+<p>​        从上面我重点标记的这句话就可以知道，对这种固件的提取能不能采用这种办法呢？可以不可以呢，试试不就好了！</p>
+<p><strong>0x02 拷贝完整的固件文件并压缩为完整文件系统</strong></p>
+<p>​        首先我们按步骤来创建出该固件的完整的备份：</p>
+<ol>
+<li><p>步骤 1-创建空的根文件系统，文件系统的大小为 65536 × 24000/1024/1024=1.5G。接下来我们会在这个空的根文件系统中存放文件。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">dd if=/dev/zero of=rootfs bs=65536 count=24000 </span><br><span class="line">mke2fs -F rootfs</span><br></pre></td></tr></table></figure>
+<p>[^dd]: dd: 读取源文件的内容并创建一个新文件，if 指定源文件内容，of 指定新文件名字，bs 和 count 指定新文件的大小  mke2fs: 将新创建的 rootfs 格式化为 Linux 可识别的文件系统</p>
+</li>
+<li><p>步骤 2-挂载空的根文件系统，将 1.5G 的文件系统挂载在 mnt 目录下，然后通过 mnt 目录将内容写入根文件系统</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">挂载空的根文件系统</span><br><span class="line">mkdir mnt </span><br><span class="line">mount rootfs mnt -o loop</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>步骤 3-拷贝根文件目录的内容到文件系统</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">拷贝根文件目录统</span><br><span class="line">cp -rp yourRootDir mnt </span><br><span class="line">umount mnt</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>拷贝完后根文件系统的内容后，完成根文件系统的创建，这时的 rootfs 没有被压缩，接下来我们用工具将其压缩成 Squash 格式的文件系统</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">mkdir squashfs-dir </span><br><span class="line">mv rootfs squshfs-dir </span><br><span class="line">mksquashfs-4.1 squashfs-dir squashRootfs</span><br></pre></td></tr></table></figure>
+<p>[^mksquashfs-4.1]: mksquashfs-4.1 是在安装 Squash 工具的过程中生成的命令，用于将一个文件夹下的内容打包并压缩成一个文件系统。其后第一个参数为文件夹，第二个参数为生成的文件系统。</p>
+</li>
+</ol>
+<p><strong>0x03 制作为ext4文件系统</strong></p>
+<p>​        上面我们把提取出来的文件制作为Squash 格式的文件系统，我们还可以制作为我们想要制作的格式的文件系统，例如，我们可以制作为ext4文件系统，同理按照我们下面的步骤；</p>
+<ol>
+<li><p>步骤1-新建目录rootfs_tmp文件，用于临时挂载文件系统</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mkdir -p rootfs_tmp</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>步骤2-制作一个128M(128x1024=131072)的ext4空白文件：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">dd if=/dev/zero of=rootfs.ext4 bs=1024 count=131072</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>再将新建的rootfs.ext4文件格式化为ext4格式：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo mkfs.ext4 rootfs.ext4</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>将rootfs.ext4文件挂载到前面新建的临时目录rootfs_tmp，注意这里要使用mount –o loop的属性，表示要把rootfs.ext4当作硬盘分区挂载到rootfs_tmp：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo mount -o loop rootfs.ext4 ./rootfs_tmp</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>这时，我们就可以给rootfs.ext4填充内容了。执行如下指令拷贝文件系统内容：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">cd ./rootfs_tmp</span><br><span class="line">cp -avrf ../busybox_rootfs/* ./</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>拷贝完后，卸载挂载的rootfs.ext4文件，即完成了文件系统的制作：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo umount ./rootfs_tmp</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<p>这样就完成ext4格式的rooffs文件系统的制作。</p>
+<p>通过这种方式我们就可以提取出整个完整的固件！感觉一般没什么用，觉得好玩就记录下来。</p>
+<p><strong>0x04 参考链接</strong></p>
+
+      
+    </div>
+
+  </div>
+
+  <div class="article-footer">
+    <div class="article-meta pull-left">
+
+    
+
+    
+    
+
+    <span class="post-tags">
+      <i class="icon-tags"></i>
+        <a href="/tags/linux/">linux</a>
+    </span>
+    
+
+    </div>
+
+    
+  </div>
+</article>
+
+
+    </main>
+
+    <footer class="site-footer">
+  <p class="site-info">
+    Proudly powered by <a href="https://hexo.io/" target="_blank">Hexo</a> and
+    Theme by <a href="https://github.com/CodeDaraW/Hacker" target="_blank">Hacker</a>
+    </br>
+    
+    &copy; 2019 fanson
+    
+  </p>
+</footer>
+    
+  </div>
+</div>
+<script type="text/javascript" src="/js/src/love.js"></script>
+</body>
+</html>
