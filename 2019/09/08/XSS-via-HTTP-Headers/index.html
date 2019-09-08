@@ -1,0 +1,146 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>XSS via HTTP Headers | fanson&#39;s Blog</title>
+
+  
+  <meta name="author" content="fanson">
+  
+
+  
+  <meta name="description" content="XSS via HTTP Headers
+​        在看到BRUTE XSS有一个通过HTTP Headers进行XSS的练习，觉得蛮有意思的，也特别适合当作XSS的入门练习题，我来记录下，有需要的童鞋可以来围观下！
+​        先来说下HTTP Headers XSS，一般在某些情况">
+  
+
+  
+  
+  <meta name="keywords" content="xss">
+  
+
+  <meta id="viewport" name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+  <meta property="og:title" content="XSS via HTTP Headers"/>
+
+  <meta property="og:site_name" content="fanson&#39;s Blog"/>
+
+  
+  <meta property="og:image" content="/favicon.ico"/>
+  
+
+  <link href="/favicon.ico" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="fanson&#39;s Blog" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+</head>
+
+
+<body>
+<div class="blog">
+  <div class="content">
+
+    <header>
+  <div class="site-branding">
+    <h1 class="site-title">
+      <a href="/">fanson&#39;s Blog</a>
+    </h1>
+    <p class="site-description"></p>
+  </div>
+  <nav class="site-navigation">
+    <ul>
+      
+        <li><a href="/">Home</a></li>
+      
+        <li><a href="/archives">Archives</a></li>
+      
+    </ul>
+  </nav>
+</header>
+
+    <main class="site-main posts-loop">
+    <article>
+
+  
+    
+    <h3 class="article-title"><span>XSS via HTTP Headers</span></h3>
+    
+  
+
+  <div class="article-top-meta">
+    <span class="posted-on">
+      <a href="/2019/09/08/XSS-via-HTTP-Headers/" rel="bookmark">
+        <time class="entry-date published" datetime="2019-09-08T03:06:22.000Z">
+          2019-09-08
+        </time>
+      </a>
+    </span>
+  </div>
+
+
+  
+
+  <div class="article-content">
+    <div class="entry">
+      
+        <p><strong>XSS via HTTP Headers</strong></p>
+<p>​        在看到<a href="https://brutelogic.com.br/blog/" target="_blank" rel="noopener">BRUTE XSS</a>有一个通过HTTP Headers进行XSS的练习，觉得蛮有意思的，也特别适合当作XSS的入门练习题，我来记录下，有需要的童鞋可以来围观下！</p>
+<p>​        先来说下HTTP Headers XSS，一般在某些情况下，对来自应用程序的某个HTTP头部中的数据未做一些正确的过滤处理，从而就会产生XSS的情况。</p>
+<p>​        我们来看下源码：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">&lt;!DOCTYPE html&gt;</span><br><span class="line">&lt;body&gt;</span><br><span class="line">&lt;?php</span><br><span class="line">$name = $_COOKIE[&quot;name&quot;];</span><br><span class="line">if ($name) &#123;</span><br><span class="line">	echo &quot;&lt;p&gt;welcome,$name!&lt;/p&gt;&quot;;</span><br><span class="line">&#125;</span><br><span class="line">else &#123;</span><br><span class="line">	echo &quot;&lt;p&gt;welcome guest!&lt;/p&gt;&quot;;</span><br><span class="line">&#125;</span><br><span class="line">?&gt;</span><br><span class="line">&lt;/body&gt;</span><br><span class="line">&lt;/html&gt;</span><br></pre></td></tr></table></figure>
+<p>​        通过分析源码，我们可以看到PHP代码未对HTTP cookie做任何的过滤或者处理，直接将cookie中的name字段echo到页面，那么此处就会存在XSS。</p>
+<p>我们先跑起来环境，如下图</p>
+<p><img src="/2019/09/08/XSS-via-HTTP-Headers/xss.png" alt=""></p>
+<p>正常情况下，我们访问到的页面如上图所示，我们也可以通过curl来访问；</p>
+<p><img src="/2019/09/08/XSS-via-HTTP-Headers/xss1.png" alt=""></p>
+<p>接下来，我们通过curl 向HTTP Header的cookie注入XSS</p>
+<p><img src="/2019/09/08/XSS-via-HTTP-Headers/xss2.png" alt=""></p>
+<p>我们已经看到，XSS脚步已经通过cookie注入显示到页面了，已经可以完美XSS了，对！弹框必须有</p>
+<p><img src="/2019/09/08/XSS-via-HTTP-Headers/xss3.png" alt=""></p>
+
+      
+    </div>
+
+  </div>
+
+  <div class="article-footer">
+    <div class="article-meta pull-left">
+
+    
+
+    
+    
+
+    <span class="post-tags">
+      <i class="icon-tags"></i>
+        <a href="/tags/xss/">xss</a>
+    </span>
+    
+
+    </div>
+
+    
+  </div>
+</article>
+
+
+    </main>
+
+    <footer class="site-footer">
+  <p class="site-info">
+    Proudly powered by <a href="https://hexo.io/" target="_blank">Hexo</a> and
+    Theme by <a href="https://github.com/CodeDaraW/Hacker" target="_blank">Hacker</a>
+    </br>
+    
+    &copy; 2019 fanson
+    
+  </p>
+</footer>
+    
+  </div>
+</div>
+<script type="text/javascript" src="/js/src/love.js"></script>
+</body>
+</html>
